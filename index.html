@@ -1,0 +1,97 @@
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
+  }
+}
+</script>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Digital - Big Pastel da Bel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FDBE2C', // Main yellow
+            primaryHover: '#E6A900', // Slightly darker yellow for hover
+            brandText: '#4A2C2A', // Deep brown for text on yellow
+            itemDescriptionText: '#6B4F4B', // Softer brown
+            categoryBg: '#8D4B3F', // Muted red/brown for category headers/buttons
+            categoryText: '#FFFFFF', // White text for category headers/buttons
+            priceTextOnCategory: '#FFFFFF', // White text for prices on category headers
+            lightBg: '#FFFBF2', // Very light cream/off-white for cards/modals
+            lightText: '#333333', // General dark text for light backgrounds
+          },
+          fontFamily: {
+            sans: ['"Nunito Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'serif'], 
+          },
+          height: {
+            '48': '12rem', 
+            '64': '16rem', 
+            '80': '20rem', 
+            '96': '24rem', 
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Nunito Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #FFFBF2; /* Using lightBg as the default page background */
+    }
+    /* Scrollbar styles */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #fdf7e8; 
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #E6A900; 
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #c59000; 
+    }
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: #E6A900 #fdf7e8; 
+    }
+    /* Accessibility focus style */
+    *:focus-visible {
+        outline: 3px solid #4A2C2A; 
+        outline-offset: 2px;
+    }
+    button:focus-visible, a:focus-visible {
+        outline: 3px solid #4A2C2A !important;
+        outline-offset: 2px !important;
+    }
+    /* Ensure the main app container takes the primary color if needed, or adjust as per design */
+    #app-container {
+        background-color: #FDBE2C; /* primary yellow */
+    }
+  </style>
+</head>
+<body> {/* Removed bg-primary from body, will apply to specific container if needed */}
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html><link rel="stylesheet" href="index.css">
+<script src="index.tsx" type="module"></script>

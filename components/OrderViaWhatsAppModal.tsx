@@ -1,0 +1,227 @@
+
+import React, { useState } from 'react';
+import { CartItem, PaymentMethod } from '../types';
+import { CloseIcon, TrashIcon, UserIcon, AddressIcon, WhatsAppIcon } from '../constants';
+
+interface OrderViaWhatsAppModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedItems: CartItem[];
+  onRemoveItem: (itemId: string) => void;
+  onUpdateQuantity: (itemId: string, newQuantity: number) => void;
+  totalAmount: number;
+  paymentMethods: PaymentMethod[];
+  restaurantWhatsAppNumber: string;
+  onOrderSent: () => void;
+}
+
+const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
+  isOpen,
+  onClose,
+  selectedItems,
+  onRemoveItem,
+  onUpdateQuantity,
+  totalAmount,
+  paymentMethods,
+  restaurantWhatsAppNumber,
+  onOrderSent,
+}) => {
+  const [customerName, setCustomerName] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  if (!isOpen) return null;
+
+  const handleSendOrder = () => {
+    setFormError(null);
+    if (selectedItems.length === 0) {
+      setFormError("Seu carrinho está vazio. Adicione itens antes de enviar.");
+      return;
+    }
+    if (!customerName.trim()) {
+      setFormError("Por favor, informe seu nome.");
+      return;
+    }
+    if (!deliveryAddress.trim()) {
+      setFormError("Por favor, informe o endereço de entrega.");
+      return;
+    }
+    if (!selectedPaymentMethodId) {
+      setFormError("Por favor, selecione uma forma de pagamento.");
+      return;
+    }
+
+    const selectedPaymentMethod = paymentMethods.find(p => p.id === selectedPaymentMethodId);
+
+    let message = `Olá, Big Pastel da Bel! Gostaria de fazer o seguinte pedido:\n\n`;
+    message += `*Cliente:* ${customerName.trim()}\n`;
+    message += `*Endereço para Entrega:*\n${deliveryAddress.trim()}\n\n`;
+    message += "*Itens do Pedido:*\n";
+    selectedItems.forEach(item => {
+      message += `- ${item.quantity}x ${item.name} (R$ ${item.price.toFixed(2).replace('.', ',')} cada)\n`;
+    });
+    message += `\n*Total do Pedido:* R$ ${totalAmount.toFixed(2).replace('.', ',')}\n`;
+    message += `*Forma de Pagamento:* ${selectedPaymentMethod?.name || 'Não informada'}\n\n`;
+    message += `Aguardo a confirmação e o tempo estimado para entrega. Obrigado!`;
+
+    const whatsappUrl = `https://wa.me/${restaurantWhatsAppNumber}?text=${encodeURIComponent(message)}`;
+    
+    // Open WhatsApp in a new tab
+    window.open(whatsappUrl, '_blank');
+    
+    // Call onOrderSent to reset cart in App.tsx and close modal
+    onOrderSent(); 
+    // Reset local form state for next time
+    setCustomerName('');
+    setDeliveryAddress('');
+    setSelectedPaymentMethodId(null);
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-2 sm:p-4 transition-opacity duration-300 ease-in-out"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="whatsapp-order-modal-title"
+    >
+      <div 
+        className="bg-lightBg rounded-xl shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden transform transition-all duration-300 ease-in-out scale-95 group-hover:scale-100"
+        onClick={e => e.stopPropagation()} 
+      >
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200">
+          <h2 id="whatsapp-order-modal-title" className="text-xl sm:text-2xl font-semibold text-brandText">Revisar e Enviar Pedido</h2>
+          <button 
+            onClick={onClose} 
+            className="text-gray-500 hover:text-categoryBg transition-colors"
+            aria-label="Fechar"
+          >
+            <CloseIcon className="text-2xl" />
+          </button>
+        </div>
+
+        <div className="p-4 sm:p-6 overflow-y-auto flex-grow space-y-6">
+          {/* Selected Items Section */}
+          <div>
+            <h3 className="text-lg font-semibold text-brandText mb-2">Itens Selecionados:</h3>
+            {selectedItems.length === 0 ? (
+              <p className="text-itemDescriptionText italic">Nenhum item selecionado. Volte ao cardápio!</p>
+            ) : (
+              <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                {selectedItems.map(item => (
+                  <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0 text-sm">
+                    <div>
+                      <h4 className="font-medium text-brandText">{item.name}</h4>
+                      <p className="text-xs text-categoryBg">R$ {item.price.toFixed(2).replace('.', ',')}</p>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="flex items-center border border-gray-300 rounded-md mr-2">
+                        <button onClick={() => onUpdateQuantity(item.id, item.quantity - 1)} className="px-2 py-0.5 text-sm text-gray-600 hover:bg-gray-100 rounded-l-md" aria-label={`Diminuir ${item.name}`}>-</button>
+                        <span className="px-2 py-0.5 text-brandText text-xs">{item.quantity}</span>
+                        <button onClick={() => onUpdateQuantity(item.id, item.quantity + 1)} className="px-2 py-0.5 text-sm text-gray-600 hover:bg-gray-100 rounded-r-md" aria-label={`Aumentar ${item.name}`}>+</button>
+                      </div>
+                      <button onClick={() => onRemoveItem(item.id)} className="text-red-500 hover:text-red-700" aria-label={`Remover ${item.name}`}><TrashIcon className="text-xs"/></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {selectedItems.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
+                    <p className="text-md font-semibold text-brandText">Total do Pedido:</p>
+                    <p className="text-lg font-bold text-categoryBg">R$ {totalAmount.toFixed(2).replace('.', ',')}</p>
+                </div>
+            )}
+          </div>
+
+          {/* Customer Info Section */}
+          <div>
+            <h3 className="text-lg font-semibold text-brandText mb-3">Seus Dados:</h3>
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="customerName" className="block text-sm font-medium text-itemDescriptionText mb-1">Nome Completo <span className="text-red-500">*</span></label>
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <UserIcon className="text-gray-400" />
+                    </div>
+                    <input 
+                        type="text" 
+                        id="customerName" 
+                        value={customerName} 
+                        onChange={e => setCustomerName(e.target.value)} 
+                        className="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" 
+                        placeholder="Seu nome para o pedido"
+                        required
+                    />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="deliveryAddress" className="block text-sm font-medium text-itemDescriptionText mb-1">Endereço Completo para Entrega <span className="text-red-500">*</span></label>
+                 <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 top-0 pt-2 flex items-start pointer-events-none">
+                        <AddressIcon className="text-gray-400" />
+                    </div>
+                    <textarea 
+                        id="deliveryAddress" 
+                        value={deliveryAddress} 
+                        onChange={e => setDeliveryAddress(e.target.value)} 
+                        rows={3}
+                        className="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" 
+                        placeholder="Ex: Rua das Palmeiras, 123, Bairro Sol Nascente, Apt 4B, Perto do mercado X."
+                        required
+                    />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Method Section */}
+          <div>
+            <h3 className="text-lg font-semibold text-brandText mb-3">Forma de Pagamento: <span className="text-red-500">*</span></h3>
+            <div className="space-y-2">
+              {paymentMethods.map(method => (
+                <button
+                  key={method.id}
+                  onClick={() => setSelectedPaymentMethodId(method.id)}
+                  className={`w-full flex items-center p-3 border rounded-lg transition-all duration-200 ease-in-out text-sm focus:outline-none focus:ring-2
+                    ${selectedPaymentMethodId === method.id 
+                      ? 'border-categoryBg bg-yellow-100 ring-categoryBg ring-opacity-50 shadow-sm' 
+                      : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'}`}
+                  role="radio"
+                  aria-checked={selectedPaymentMethodId === method.id}
+                >
+                  {method.icon && <span className={`text-lg ${selectedPaymentMethodId === method.id ? 'text-categoryBg' : 'text-gray-600'}`}>{method.icon}</span>}
+                  <div className="ml-2 text-left">
+                      <span className={`font-medium ${selectedPaymentMethodId === method.id ? 'text-categoryBg' : 'text-brandText'}`}>{method.name}</span>
+                      {method.description && <p className={`text-xs ${selectedPaymentMethodId === method.id ? 'text-red-700 opacity-90' : 'text-gray-500'}`}>{method.description}</p>}
+                  </div>
+                  {selectedPaymentMethodId === method.id && (
+                      <span className="ml-auto text-categoryBg"><i className="fas fa-check-circle text-md"></i></span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {formError && (
+            <p className="text-sm text-red-600 bg-red-100 p-2 rounded-md text-center">{formError}</p>
+          )}
+
+        </div>
+
+        <div className="p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
+          <button
+            onClick={handleSendOrder}
+            disabled={selectedItems.length === 0}
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 text-md flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            <WhatsAppIcon className="mr-2 text-lg"/> Enviar Pedido via WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default OrderViaWhatsAppModal;
