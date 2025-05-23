@@ -30,7 +30,7 @@ const Footer: React.FC<FooterProps> = ({ info }) => {
           &copy; {new Date().getFullYear()} {info.name}. Todos os direitos reservados.
         </p>
          <p className="text-xs opacity-50 mt-1">
-          Cardápio Digital por AI Studio.
+          Cardápio Digital por Hiago H.
         </p>
       </div>
     </footer>
