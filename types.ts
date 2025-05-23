@@ -1,5 +1,6 @@
-
 import React from 'react';
+
+export type ItemType = 'Tradicional' | 'Especial' | 'Doce' | 'Borda' | 'Bebida';
 
 export interface RestaurantInfo {
   name: string;
@@ -22,25 +23,31 @@ export interface RestaurantInfo {
 }
 
 export interface MenuItem {
-  id: string;
-  name:string; // Name of the pastel
-  description: string; // For ingredients list like (Queijo, Presunto, Tomate e Orégano)
-  price: number; // Individual item price, will be set by category group price
-  imageUrl: string; // Placeholder for Imgur link, not displayed in this layout
-  category: string; // Matches Category id
+  id: string; // Unique ID for the base item (pastel, bebida, borda definition)
+  name:string; 
+  description: string; 
+  price: number; 
+  imageUrl?: string; // Optional, as bordas won't have images
+  category: string; // Matches Category id (for pastéis and bebidas)
+  itemType?: ItemType; 
   tags?: string[]; 
   options?: string[];
 }
 
-export interface CartItem extends MenuItem {
+export interface CartItem extends MenuItem { // MenuItem properties here are the base pastel/bebida
+  cartItemId: string; // Unique ID for this specific cart entry, e.g., "pastel_carne_borda_cheddar"
+  baseItemName: string; // Original name of the pastel or bebida
   quantity: number;
+  selectedBorda?: MenuItem; // The selected borda item, if applicable
+  // The 'name' property in CartItem will be composite (e.g., "Pastel de Carne (Borda: Cheddar)")
+  // The 'price' property in CartItem will be pastel.price + (selectedBorda?.price || 0)
 }
 
 export interface Category {
   id: string;
   name: string;
-  icon?: React.ReactNode; // Kept for potential future use, but not used in current design
-  price?: string; // Group price for the category, e.g., "R$ 17,00"
+  icon?: React.ReactNode; 
+  price?: string; 
 }
 
 export interface Promotion {

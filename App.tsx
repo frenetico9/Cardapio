@@ -1,126 +1,198 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import StyledCategorySection from './components/StyledCategorySection';
 import FloatingActionButtons from './components/FloatingActionButtons';
-import OrderViaWhatsAppModal from './components/OrderViaWhatsAppModal'; // New Modal
+import OrderViaWhatsAppModal from './components/OrderViaWhatsAppModal';
 import WelcomeSection from './components/WelcomeSection';
 import CategoryNavigation from './components/CategoryNavigation';
 import InfoPanel from './components/InfoPanel';
-import { RESTAURANT_INFO, MENU_CATEGORIES, ALL_MENU_ITEMS as INITIAL_MENU_ITEMS, AVAILABLE_PAYMENT_METHODS, InfoIcon } from './constants';
+import SelectBordaModal from './components/SelectBordaModal'; // New modal
+import { RESTAURANT_INFO, NAV_CATEGORIES, ALL_MENU_ITEMS as INITIAL_MENU_ITEMS, AVAILABLE_PAYMENT_METHODS, AVAILABLE_BORDAS, InfoIcon } from './constants';
 import { MenuItem, CartItem, Category } from './types';
 
 const App = (): JSX.Element => {
   const [menuItems] = useState<MenuItem[]>(INITIAL_MENU_ITEMS);
-  const [activeCategory, setActiveCategory] = useState<string | null>(
-    MENU_CATEGORIES.length > 0 ? MENU_CATEGORIES[0].id : null
-  );
-  const [filteredItems, setFilteredItems] = useState<MenuItem[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>(NAV_CATEGORIES[0]?.id || 'all');
+  const [itemsToDisplay, setItemsToDisplay] = useState<MenuItem[]>([]);
   
-  const [selectedItems, setSelectedItems] = useState<CartItem[]>([]); // Renamed from cartItems for clarity
+  const [selectedItems, setSelectedItems] = useState<CartItem[]>([]);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [showAddedToCartMessage, setShowAddedToCartMessage] = useState<string | null>(null);
 
-  const applyFilters = useCallback(() => {
-    let itemsToFilter = [...menuItems]; 
-    if (activeCategory) {
-      itemsToFilter = itemsToFilter.filter(item => item.category === activeCategory);
-    } else {
-      itemsToFilter = menuItems.filter(item => item.category === (MENU_CATEGORIES[0]?.id || ''));
-    }
-    setFilteredItems(itemsToFilter);
-  }, [activeCategory, menuItems]);
+  // State for Borda Selection Modal
+  const [isBordaModalOpen, setIsBordaModalOpen] = useState(false);
+  const [currentPastelForBorda, setCurrentPastelForBorda] = useState<MenuItem | undefined>(undefined);
+
+  // Approximate height of fixed header (h-40 = 160px) + category nav (h-12 = 48px) = 208px
+  const fixedHeaderHeight = "pt-[208px]"; 
 
   useEffect(() => {
-    applyFilters();
-  }, [activeCategory, menuItems, applyFilters]);
+    if (activeCategory === 'all') {
+      setItemsToDisplay(menuItems.filter(item => item.itemType !== 'Borda')); // Exclude borda definitions
+    } else {
+      setItemsToDisplay(menuItems.filter(item => item.category === activeCategory && item.itemType !== 'Borda'));
+    }
+  }, [activeCategory, menuItems]);
 
   const handleCategorySelect = (categoryId: string) => {
     setActiveCategory(categoryId);
+    const mainContentArea = document.querySelector('main');
+    if (mainContentArea) {
+        mainContentArea.scrollTop = 0; // Scroll main content to top
+    } else {
+        window.scrollTo(0,0); // Fallback to window scroll
+    }
   };
 
-  const handleSelectItem = (item: MenuItem) => { // Renamed from handleAddToCart
-    const message = item.category === "bordas" 
-      ? `${item.name} (borda) adicionada! Adicione também seu pastel.`
-      : `${item.name} adicionado à seleção!`;
-    setShowAddedToCartMessage(message);
-    setTimeout(() => setShowAddedToCartMessage(null), item.category === "bordas" ? 3500 : 2000);
+  const handleSelectPastelOrAddItem = (item: MenuItem) => {
+    if (item.itemType === 'Tradicional' || item.itemType === 'Especial' || item.itemType === 'Doce') {
+      setCurrentPastelForBorda(item);
+      setIsBordaModalOpen(true);
+    } else { // For Bebidas or other direct-add items
+      const cartItemId = item.id + '_direct'; 
+      const message = `${item.name} adicionado à seleção!`;
+      setShowAddedToCartMessage(message);
+      setTimeout(() => setShowAddedToCartMessage(null), 2000);
 
+      setSelectedItems(prevItems => {
+        const existingItem = prevItems.find(ci => ci.cartItemId === cartItemId);
+        if (existingItem) {
+          return prevItems.map(ci =>
+            ci.cartItemId === cartItemId ? { ...ci, quantity: ci.quantity + 1 } : ci
+          );
+        }
+        return [
+          ...prevItems,
+          {
+            ...item,
+            cartItemId: cartItemId,
+            baseItemName: item.name,
+            quantity: 1,
+          },
+        ];
+      });
+    }
+  };
+  
+  const handleConfirmBordaSelection = (pastel: MenuItem, chosenBorda?: MenuItem) => {
+    const cartItemId = pastel.id + (chosenBorda ? `_${chosenBorda.id}` : '_no_borda');
+    const basePastelName = pastel.name;
+    const bordaDisplayName = chosenBorda ? chosenBorda.name : '';
+  
+    let displayNameInCart = basePastelName;
+    if (chosenBorda) {
+      displayNameInCart += ` (Borda: ${bordaDisplayName})`;
+    }
+  
+    const message = `${displayNameInCart} adicionado à seleção!`;
+    setShowAddedToCartMessage(message);
+    setTimeout(() => setShowAddedToCartMessage(null), 2500);
+  
     setSelectedItems(prevItems => {
-      const existingItem = prevItems.find(cartItem => cartItem.id === item.id);
+      const existingItem = prevItems.find(ci => ci.cartItemId === cartItemId);
       if (existingItem) {
-        return prevItems.map(cartItem =>
-          cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
+        return prevItems.map(ci =>
+          ci.cartItemId === cartItemId ? { ...ci, quantity: ci.quantity + 1 } : ci
         );
       }
-      return [...prevItems, { ...item, quantity: 1 }];
+      return [
+        ...prevItems,
+        {
+          ...pastel, 
+          cartItemId: cartItemId,
+          baseItemName: basePastelName,
+          name: displayNameInCart,
+          quantity: 1,
+          selectedBorda: chosenBorda,
+          price: pastel.price + (chosenBorda?.price || 0), 
+          imageUrl: pastel.imageUrl 
+        },
+      ];
     });
+  
+    setIsBordaModalOpen(false);
+    setCurrentPastelForBorda(undefined);
   };
 
-  const handleRemoveSelectedItem = (itemId: string) => { // Renamed from handleRemoveFromCart
-    setSelectedItems(prevItems => prevItems.filter(item => item.id !== itemId));
+
+  const handleRemoveSelectedItem = (cartItemIdToRemove: string) => {
+    setSelectedItems(prevItems => prevItems.filter(item => item.cartItemId !== cartItemIdToRemove));
   };
 
-  const handleUpdateSelectedItemQuantity = (itemId: string, newQuantity: number) => { // Renamed
+  const handleUpdateSelectedItemQuantity = (cartItemIdToUpdate: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      handleRemoveSelectedItem(itemId);
+      handleRemoveSelectedItem(cartItemIdToUpdate);
     } else {
       setSelectedItems(prevItems =>
-        prevItems.map(item => (item.id === itemId ? { ...item, quantity: newQuantity } : item))
+        prevItems.map(item => (item.cartItemId === cartItemIdToUpdate ? { ...item, quantity: newQuantity } : item))
       );
     }
   };
 
-  const calculateTotalAmount = (): number => { // Renamed
+  const calculateTotalAmount = (): number => {
     return selectedItems.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
-  const getSelectedItemCount = (): number => { // Renamed
+  const getSelectedItemCount = (): number => {
     return selectedItems.reduce((count, item) => count + item.quantity, 0);
   };
 
   const toggleWhatsAppModal = () => setIsWhatsAppModalOpen(!isWhatsAppModalOpen);
   
   const handleWhatsAppOrderSent = () => {
-    // This function is called after the WhatsApp link is generated and opened.
-    // We can clear the selected items and close the modal.
     setSelectedItems([]); 
     setIsWhatsAppModalOpen(false);
-    // Optionally, show a success message for a few seconds
+    setIsBordaModalOpen(false);
+    setCurrentPastelForBorda(undefined);
     setShowAddedToCartMessage("Seu pedido foi enviado para o WhatsApp! Finalize por lá.");
     setTimeout(() => setShowAddedToCartMessage(null), 4000);
   };
 
-  const currentCategoryObject = MENU_CATEGORIES.find(cat => cat.id === activeCategory);
+  const currentNavCategoryObject = NAV_CATEGORIES.find(cat => cat.id === activeCategory);
 
   return (
-    <div id="app-container" className="flex flex-col min-h-screen bg-primary">
-      <Header info={RESTAURANT_INFO} />
+    <div id="app-container" className="flex flex-col min-h-screen font-sans"> {/* Global font set on body now */}
+      <div className="fixed top-0 left-0 right-0 z-40 shadow-header">
+        <Header info={RESTAURANT_INFO} />
+        <CategoryNavigation 
+          categories={NAV_CATEGORIES}
+          activeCategory={activeCategory}
+          onSelectCategory={handleCategorySelect}
+        />
+      </div>
       
-      <WelcomeSection name={RESTAURANT_INFO.name} tagline1={RESTAURANT_INFO.tagline1} />
-
-      <CategoryNavigation 
-        categories={MENU_CATEGORIES}
-        activeCategory={activeCategory}
-        onSelectCategory={handleCategorySelect}
-      />
-      
-      <main className="flex-grow container mx-auto px-2 sm:px-4 lg:px-6 py-8 bg-lightBg shadow-inner">
-        {currentCategoryObject && (
-          <StyledCategorySection 
-            key={currentCategoryObject.id} 
-            category={currentCategoryObject} 
-            items={filteredItems}
-            onAddToCart={handleSelectItem} // Prop name on StyledCategorySection kept for simplicity if not changed there
+      <main className={`flex-grow container mx-auto px-2 sm:px-4 lg:px-6 py-8 bg-lightBg ${fixedHeaderHeight}`}>
+        <WelcomeSection name={RESTAURANT_INFO.name} tagline1={RESTAURANT_INFO.tagline1} />
+        
+        {activeCategory === 'all' ? (
+          NAV_CATEGORIES.filter(cat => cat.id !== 'all').map(loopCategory => {
+            if (loopCategory.id === 'bordas') return null; 
+            const itemsForThisCategory = menuItems.filter(item => item.category === loopCategory.id && item.itemType !== 'Borda');
+            if (itemsForThisCategory.length === 0) return null;
+            return (
+              <StyledCategorySection
+                key={loopCategory.id}
+                category={loopCategory}
+                items={itemsForThisCategory}
+                onSelectPastel={handleSelectPastelOrAddItem}
+              />
+            );
+          })
+        ) : currentNavCategoryObject && itemsToDisplay.length > 0 ? (
+          <StyledCategorySection
+            key={currentNavCategoryObject.id}
+            category={currentNavCategoryObject}
+            items={itemsToDisplay}
+            onSelectPastel={handleSelectPastelOrAddItem}
           />
-        )}
-
-        {filteredItems.length === 0 && activeCategory && (
-             <div className="text-center py-10 my-8 bg-white p-6 rounded-lg shadow">
+        ) : (
+             <div className="text-center py-10 my-8 bg-cardBg p-6 rounded-lg shadow-subtle">
                 <InfoIcon className="text-5xl text-brandText opacity-50 mb-4" />
-                <p className="text-xl text-brandText font-semibold">Nenhum pastel encontrado nesta categoria!</p>
-                <p className="text-itemDescriptionText opacity-75">Escolha outra categoria para ver mais delícias.</p>
+                <p className="text-xl text-brandText font-semibold">
+                  {currentNavCategoryObject ? `Nenhum item encontrado em ${currentNavCategoryObject.name}!` : 'Carregando itens...'}
+                </p>
+                <p className="text-itemDescriptionText opacity-75">Por favor, selecione outra categoria ou verifique a aba "Todos".</p>
             </div>
         )}
         
@@ -136,6 +208,19 @@ const App = (): JSX.Element => {
         onWhatsAppOrderClick={toggleWhatsAppModal} 
       />
 
+      {currentPastelForBorda && (
+        <SelectBordaModal
+          isOpen={isBordaModalOpen}
+          onClose={() => {
+            setIsBordaModalOpen(false);
+            setCurrentPastelForBorda(undefined);
+          }}
+          pastel={currentPastelForBorda}
+          bordas={AVAILABLE_BORDAS}
+          onConfirm={handleConfirmBordaSelection}
+        />
+      )}
+
       <OrderViaWhatsAppModal
         isOpen={isWhatsAppModalOpen}
         onClose={toggleWhatsAppModal}
@@ -145,11 +230,11 @@ const App = (): JSX.Element => {
         totalAmount={calculateTotalAmount()}
         paymentMethods={AVAILABLE_PAYMENT_METHODS}
         restaurantWhatsAppNumber={RESTAURANT_INFO.contact.whatsapp}
-        onOrderSent={handleWhatsAppOrderSent} // New prop to reset state
+        onOrderSent={handleWhatsAppOrderSent}
       />
 
       {showAddedToCartMessage && (
-        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-brandText text-primary px-6 py-3 rounded-lg shadow-xl z-[100] text-center">
+        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-brandText text-primary px-6 py-3 rounded-lg shadow-xl z-[100] text-center font-medium">
           {showAddedToCartMessage}
         </div>
       )}

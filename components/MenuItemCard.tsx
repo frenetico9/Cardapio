@@ -1,55 +1,73 @@
 import React from 'react';
-import { MenuItem } from '../types';
-import { IMGUR_PLACEHOLDER } from '../constants'; // Assuming IMGUR_PLACEHOLDER is exported
+import { MenuItem, ItemType } from '../types';
+import { IMGUR_PLACEHOLDER } from '../constants';
 
 interface MenuItemCardProps {
   item: MenuItem;
-  onAddToCart: (item: MenuItem) => void;
-  categoryPrice?: string; // Optional: if you want to show category price if item price is 0, e.g. for Bordas
+  onSelectPastel: (pastel: MenuItem) => void;
+  categoryPrice?: string;
 }
 
-const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onAddToCart, categoryPrice }) => {
-  const displayPrice = item.price > 0 ? `R$ ${item.price.toFixed(2).replace('.', ',')}` : (categoryPrice || "Sem Adicional");
-  const isBorda = item.category === 'bordas';
+const tagStyles: Record<ItemType, { bgColor: string; textColor: string; borderColor?: string }> = {
+  Tradicional: { bgColor: 'bg-sky-100', textColor: 'text-sky-700', borderColor: 'border-sky-300' },
+  Especial: { bgColor: 'bg-amber-100', textColor: 'text-amber-700', borderColor: 'border-amber-300' },
+  Doce: { bgColor: 'bg-pink-100', textColor: 'text-pink-700', borderColor: 'border-pink-300' },
+  Borda: { bgColor: 'bg-slate-100', textColor: 'text-slate-700', borderColor: 'border-slate-300' },
+  Bebida: { bgColor: 'bg-blue-100', textColor: 'text-blue-700', borderColor: 'border-blue-300' },
+};
+
+const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onSelectPastel, categoryPrice }) => {
+  const displayPrice = item.price > 0 ? `R$ ${item.price.toFixed(2).replace('.', ',')}` : (categoryPrice || "Preço sob consulta");
+  const isPastel = item.itemType === 'Tradicional' || item.itemType === 'Especial' || item.itemType === 'Doce';
+
+  const handleButtonClick = () => {
+    onSelectPastel(item);
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 hover:shadow-2xl hover:transform hover:-translate-y-1">
-      {/* Image Section */}
+    <div className="bg-cardBg rounded-xl shadow-subtle hover:shadow-lifted flex flex-col transition-all duration-300 overflow-hidden group">
       {item.imageUrl && item.imageUrl !== IMGUR_PLACEHOLDER ? (
         <img 
           src={item.imageUrl} 
           alt={item.name} 
-          className="w-full h-40 object-cover" 
+          className="w-full h-60 sm:h-72 object-cover transition-transform duration-300 group-hover:scale-105" 
         />
       ) : (
-        <div className="w-full h-40 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500 text-sm italic">
-            {isBorda ? 'Borda' : 'Pastel'}
+        <div className="w-full h-60 sm:h-72 bg-slate-200 flex items-center justify-center">
+          <span className="text-slate-500 text-sm italic">
+            {item.itemType === 'Bebida' ? 'Bebida' : 'Imagem Indisponível'}
           </span>
         </div>
       )}
 
-      {/* Content Section */}
-      <div className="p-4 flex flex-col flex-grow">
-        <h3 className="text-lg font-semibold text-brandText mb-1 truncate" title={item.name}>
+      <div className="p-4 sm:p-5 flex flex-col flex-grow">
+        {item.itemType && tagStyles[item.itemType] && (
+          <span 
+            className={`self-start text-xs font-semibold px-2 py-0.5 rounded-full mb-2 border ${tagStyles[item.itemType].bgColor} ${tagStyles[item.itemType].textColor} ${tagStyles[item.itemType].borderColor}`}
+            aria-label={`Tipo: ${item.itemType}`}
+          >
+            {item.itemType.toUpperCase()}
+          </span>
+        )}
+        <h3 className="text-lg font-semibold text-slate-800 mb-1 truncate" title={item.name}>
           {item.name}
         </h3>
         {item.description && (
-          <p className="text-xs text-itemDescriptionText mb-2 h-8 overflow-hidden" title={item.description}>
+          <p className="text-xs text-itemDescriptionText mb-2 min-h-[2.5rem] line-clamp-2" title={item.description}>
             ({item.description})
           </p>
         )}
         
-        <p className={`text-xl font-bold mt-auto mb-3 ${isBorda && item.price === 0 ? 'text-green-600' : 'text-categoryBg'}`}>
+        <p className={`text-xl font-bold text-slate-700 mt-auto mb-3`}>
           {displayPrice}
         </p>
 
         <button
-          onClick={() => onAddToCart(item)}
-          className="w-full bg-categoryBg hover:bg-opacity-80 text-categoryText font-semibold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-categoryBg focus:ring-opacity-50"
-          aria-label={`Adicionar ${item.name} ao carrinho`}
+          onClick={handleButtonClick}
+          className="w-full bg-vibrantOrange hover:bg-vibrantOrangeHover text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-vibrantOrange focus:ring-opacity-50 transform hover:-translate-y-0.5"
+          aria-label={`${isPastel ? 'Escolher Opções' : 'Adicionar'} ${item.name}`}
         >
-          Adicionar
+          {isPastel ? 'Escolher Opções' : 'Adicionar'}
         </button>
       </div>
     </div>

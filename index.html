@@ -16,7 +16,7 @@
     <title>Cardápio Digital - Big Pastel da Bel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -24,25 +24,37 @@
       theme: {
         extend: {
           colors: {
-            primary: '#FDBE2C', // Main yellow
-            primaryHover: '#E6A900', // Slightly darker yellow for hover
+            primary: '#FDBE2C', // Main yellow - good for fixed header
+            primaryHover: '#E6A900', 
             brandText: '#4A2C2A', // Deep brown for text on yellow
-            itemDescriptionText: '#6B4F4B', // Softer brown
-            categoryBg: '#8D4B3F', // Muted red/brown for category headers/buttons
-            categoryText: '#FFFFFF', // White text for category headers/buttons
-            priceTextOnCategory: '#FFFFFF', // White text for prices on category headers
-            lightBg: '#FFFBF2', // Very light cream/off-white for cards/modals
-            lightText: '#333333', // General dark text for light backgrounds
+            itemDescriptionText: '#52525b', // zinc-600 / slate-600 (was #6B4F4B)
+            categoryBg: '#8D4B3F', // Muted red/brown - might be used less for general UI, more for specific highlights if needed
+            categoryText: '#FFFFFF',
+            priceTextOnCategory: '#FFFFFF',
+            lightBg: '#f8fafc', // Tailwind's slate-50 (was #FFFBF2) - very light gray for page background
+            lightText: '#1e293b', // Tailwind's slate-800 (was #333333) - general dark text
+            vibrantOrange: '#F97316', // orange-500
+            vibrantOrangeHover: '#EA580C', // orange-600
+            cardBg: '#FFFFFF', // White for cards
           },
           fontFamily: {
-            sans: ['"Nunito Sans"', 'sans-serif'],
-            serif: ['"Playfair Display"', 'serif'], 
+            sans: ['"Inter"', '"Nunito Sans"', 'sans-serif'],
+            // serif: ['"Playfair Display"', 'serif'], // Removed as per new style direction
           },
           height: {
+            '22': '5.5rem', // New size for logo
+            '40': '10rem', // Keep for consistency if used elsewhere
             '48': '12rem', 
+            '60': '15rem', // New for larger images
             '64': '16rem', 
+            '72': '18rem', // New for larger images
             '80': '20rem', 
             '96': '24rem', 
+          },
+          boxShadow: {
+            'subtle': '0 4px 12px rgba(0,0,0,0.05)',
+            'lifted': '0 10px 20px rgba(0,0,0,0.07), 0 6px 6px rgba(0,0,0,0.05)',
+            'header': '0 2px 4px rgba(0,0,0,0.1)',
           }
         }
       }
@@ -50,10 +62,11 @@
   </script>
   <style>
     body {
-      font-family: 'Nunito Sans', sans-serif;
+      font-family: 'Inter', 'Nunito Sans', sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      background-color: #FFFBF2; /* Using lightBg as the default page background */
+      background-color: #f8fafc; /* lightBg - Tailwind slate-50 */
+      color: #1e293b; /* lightText - Tailwind slate-800 */
     }
     /* Scrollbar styles */
     ::-webkit-scrollbar {
@@ -61,32 +74,32 @@
       height: 8px;
     }
     ::-webkit-scrollbar-track {
-      background: #fdf7e8; 
+      background: #e2e8f0; /* slate-200 */
     }
     ::-webkit-scrollbar-thumb {
-      background: #E6A900; 
+      background: #FDBE2C; /* primary */
       border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #c59000; 
+      background: #E6A900; /* primaryHover */
     }
     html {
       scrollbar-width: thin;
-      scrollbar-color: #E6A900 #fdf7e8; 
+      scrollbar-color: #FDBE2C #e2e8f0; 
     }
     /* Accessibility focus style */
     *:focus-visible {
-        outline: 3px solid #4A2C2A; 
+        outline: 3px solid #EA580C; /* vibrantOrangeHover */
         outline-offset: 2px;
     }
     button:focus-visible, a:focus-visible {
-        outline: 3px solid #4A2C2A !important;
+        outline: 3px solid #EA580C !important; /* vibrantOrangeHover */
         outline-offset: 2px !important;
     }
-    /* Ensure the main app container takes the primary color if needed, or adjust as per design */
-    #app-container {
-        background-color: #FDBE2C; /* primary yellow */
-    }
+    /* App container no longer needs a background color, body takes care of it */
+    /* #app-container {
+        background-color: #FDBE2C; 
+    } */
   </style>
 </head>
 <body>
