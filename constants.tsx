@@ -124,15 +124,15 @@ export const ALL_MENU_ITEMS: MenuItem[] = [
 
   // Bordas - Sem Adicional (R$ 0,00)
   {
-    id: "borda_cheddar", name: "CHEDDAR", description: "Borda recheada com cheddar cremoso.", price: 0.00,
+    id: "borda_cheddar", name: "BORDA DE CHEDDAR", description: "Borda recheada com cheddar cremoso.", price: 0.00,
     imageUrl: "https://i.imgur.com/gf5qaYQ.png", category: "bordas", tags: ["Sem Adicional"],
   },
   {
-    id: "borda_catupiry", name: "CATUPIRY", description: "Borda recheada com Catupiry original.", price: 0.00,
+    id: "borda_catupiry", name: "BORDA DE CATUPIRY", description: "Borda recheada com Catupiry original.", price: 0.00,
     imageUrl: "https://i.imgur.com/KQV8LSh.jpeg", category: "bordas", tags: ["Sem Adicional"],
   },
   {
-    id: "borda_chocolate", name: "CHOCOLATE", description: "Borda recheada com chocolate ao leite.", price: 0.00,
+    id: "borda_chocolate", name: "BORDA DE CHOCOLATE", description: "Borda recheada com chocolate ao leite.", price: 0.00,
     imageUrl: "https://i.imgur.com/650CXcp.jpeg", category: "bordas", tags: ["Sem Adicional"],
   }
 ];
