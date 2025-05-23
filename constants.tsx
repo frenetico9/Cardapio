@@ -26,7 +26,7 @@ export const AddressIcon: React.FC<{ className?: string }> = ({ className }) => 
 // --- INFORMAÇÕES DO RESTAURANTE ---
 export const RESTAURANT_INFO: RestaurantInfo = {
   name: "BIG PASTEL",
-  logoUrl: "https://i.imgur.com/ELEXGD3.png",
+  logoUrl: "https://i.imgur.com/VvR0BzB.mp4", // Updated to video logo
   tagline1: "DA BEL",
   tagline2: "26CM",
   operatingHours: "", // Removed as per request
