@@ -27,7 +27,7 @@
             primary: '#FDBE2C', // Main yellow - good for fixed header
             primaryHover: '#E6A900', 
             brandText: '#4A2C2A', // Deep brown for text on yellow
-            itemDescriptionText: '#52525b', // zinc-600 / slate-600 (was #6B4F4B)
+            itemDescriptionText: '#71717a', // zinc-500 (was #52525b / zinc-600) - for softer description text
             categoryBg: '#8D4B3F', // Muted red/brown - might be used less for general UI, more for specific highlights if needed
             categoryText: '#FFFFFF',
             priceTextOnCategory: '#FFFFFF',
@@ -42,12 +42,14 @@
             // serif: ['"Playfair Display"', 'serif'], // Removed as per new style direction
           },
           height: {
-            '22': '5.5rem', // New size for logo
-            '40': '10rem', // Keep for consistency if used elsewhere
+            '22': '5.5rem', 
+            '28': '7rem', // Added for responsive header
+            '40': '10rem', 
             '48': '12rem', 
-            '60': '15rem', // New for larger images
+            '52': '13rem', // Added for responsive menu item card image
+            '60': '15rem', 
             '64': '16rem', 
-            '72': '18rem', // New for larger images
+            '72': '18rem', 
             '80': '20rem', 
             '96': '24rem', 
           },
@@ -67,6 +69,8 @@
       -moz-osx-font-smoothing: grayscale;
       background-color: #f8fafc; /* lightBg - Tailwind slate-50 */
       color: #1e293b; /* lightText - Tailwind slate-800 */
+      font-size: 1.05rem; /* Slightly increased base font size */
+      line-height: 1.6; /* Improved line height for readability */
     }
     /* Scrollbar styles */
     ::-webkit-scrollbar {
@@ -96,10 +100,6 @@
         outline: 3px solid #EA580C !important; /* vibrantOrangeHover */
         outline-offset: 2px !important;
     }
-    /* App container no longer needs a background color, body takes care of it */
-    /* #app-container {
-        background-color: #FDBE2C; 
-    } */
   </style>
 </head>
 <body>

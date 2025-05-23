@@ -8,19 +8,19 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ info }) => {
   return (
-    <footer className="bg-slate-800 text-slate-300 py-8 px-4">
+    <footer className="bg-slate-800 text-slate-300 py-6 sm:py-8 px-4">
       <div className="container mx-auto text-center">
-        <h3 className="text-2xl font-semibold text-slate-100 mb-3">{info.name} {info.tagline1}</h3>
-        <p className="mb-4 text-sm opacity-70">{info.address}</p>
+        <h3 className="text-xl sm:text-2xl font-semibold text-slate-100 mb-2 sm:mb-3">{info.name} {info.tagline1}</h3>
+        <p className="mb-3 sm:mb-4 text-xs sm:text-sm opacity-70">{info.address}</p>
         
-        <div className="flex justify-center space-x-6 my-5">
-          <a href={info.socialMedia.instagram} target="_blank" rel="noopener noreferrer" className="text-slate-300 hover:text-primary transition-colors text-2xl">
+        <div className="flex justify-center space-x-5 sm:space-x-6 my-4 sm:my-5">
+          <a href={info.socialMedia.instagram} target="_blank" rel="noopener noreferrer" className="text-slate-300 hover:text-primary transition-colors text-xl sm:text-2xl">
             <InstagramIcon />
           </a>
-          <a href={info.socialMedia.facebook} target="_blank" rel="noopener noreferrer" className="text-slate-300 hover:text-primary transition-colors text-2xl">
+          <a href={info.socialMedia.facebook} target="_blank" rel="noopener noreferrer" className="text-slate-300 hover:text-primary transition-colors text-xl sm:text-2xl">
             <FacebookIcon />
           </a>
-          <a href={`https://wa.me/${info.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-slate-300 hover:text-primary transition-colors text-2xl">
+          <a href={`https://wa.me/${info.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-slate-300 hover:text-primary transition-colors text-xl sm:text-2xl">
              <WhatsAppIcon />
           </a>
         </div>

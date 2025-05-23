@@ -14,12 +14,12 @@ const Header: React.FC<HeaderProps> = ({ info }) => {
 
   return (
     <header 
-      className="bg-primary text-brandText h-40 flex items-center" // Increased height to h-40
+      className="bg-primary text-brandText h-28 sm:h-40 flex items-center" // Responsive height
       style={headerStyle}
       aria-label="Cabeçalho principal com logo e padrão de fundo temático"
     >
-      <div className="container mx-auto px-4 flex items-center justify-center"> {/* Changed justify-between to justify-center */}
-        <div className="flex items-center"> {/* This div now only wraps the logo, and will be centered by its parent */}
+      <div className="container mx-auto px-4 flex items-center justify-center">
+        <div className="flex items-center"> 
           {isVideoLogo ? (
             <video
               src={info.logoUrl}
@@ -27,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ info }) => {
               loop
               muted
               playsInline
-              className="h-40 w-auto object-contain" // Increased height to h-40
+              className="h-28 sm:h-40 w-auto object-contain" // Responsive height
               aria-label={`${info.name} logo animado`}
             >
               Seu navegador não suporta a tag de vídeo.
@@ -36,10 +36,10 @@ const Header: React.FC<HeaderProps> = ({ info }) => {
             <img
               src={info.logoUrl}
               alt={`Logo de ${info.name}`}
-              className="h-40 w-auto object-contain" // Increased height to h-40
+              className="h-28 sm:h-40 w-auto object-contain" // Responsive height
             />
           ) : (
-            <div className="h-40 w-40 bg-gray-200 bg-opacity-50 text-gray-500 rounded-md flex items-center justify-center text-sm" aria-label="Espaço reservado para o logo"> {/* Increased height to h-40 and width to w-40 */}
+            <div className="h-28 w-28 sm:h-40 sm:w-40 bg-gray-200 bg-opacity-50 text-gray-500 rounded-md flex items-center justify-center text-sm" aria-label="Espaço reservado para o logo"> {/* Responsive height and width */}
               <span>Logo</span>
             </div>
           )}

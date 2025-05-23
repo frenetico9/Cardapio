@@ -24,8 +24,9 @@ const App = (): JSX.Element => {
   const [isBordaModalOpen, setIsBordaModalOpen] = useState(false);
   const [currentPastelForBorda, setCurrentPastelForBorda] = useState<MenuItem | undefined>(undefined);
 
-  // Approximate height of fixed header (h-40 = 160px) + category nav (h-12 = 48px) = 208px
-  const fixedHeaderHeight = "pt-[208px]"; 
+  // Mobile: h-28 (112px) header + h-12 (48px) nav = 160px
+  // SM and up: h-40 (160px) header + h-12 (48px) nav = 208px
+  const fixedHeaderHeightClasses = "pt-[160px] sm:pt-[208px]"; 
 
   useEffect(() => {
     if (activeCategory === 'all') {
@@ -152,7 +153,7 @@ const App = (): JSX.Element => {
   const currentNavCategoryObject = NAV_CATEGORIES.find(cat => cat.id === activeCategory);
 
   return (
-    <div id="app-container" className="flex flex-col min-h-screen font-sans"> {/* Global font set on body now */}
+    <div id="app-container" className="flex flex-col min-h-screen font-sans">
       <div className="fixed top-0 left-0 right-0 z-40 shadow-header">
         <Header info={RESTAURANT_INFO} />
         <CategoryNavigation 
@@ -162,7 +163,7 @@ const App = (): JSX.Element => {
         />
       </div>
       
-      <main className={`flex-grow container mx-auto px-2 sm:px-4 lg:px-6 py-8 bg-lightBg ${fixedHeaderHeight}`}>
+      <main className={`flex-grow container mx-auto px-2 sm:px-4 lg:px-6 py-8 bg-lightBg ${fixedHeaderHeightClasses}`}>
         <WelcomeSection name={RESTAURANT_INFO.name} tagline1={RESTAURANT_INFO.tagline1} />
         
         {activeCategory === 'all' ? (
@@ -187,12 +188,12 @@ const App = (): JSX.Element => {
             onSelectPastel={handleSelectPastelOrAddItem}
           />
         ) : (
-             <div className="text-center py-10 my-8 bg-cardBg p-6 rounded-lg shadow-subtle">
-                <InfoIcon className="text-5xl text-brandText opacity-50 mb-4" />
-                <p className="text-xl text-brandText font-semibold">
+             <div className="text-center py-6 sm:py-10 my-6 sm:my-8 bg-cardBg p-4 sm:p-6 rounded-lg shadow-subtle">
+                <InfoIcon className="text-4xl sm:text-5xl text-brandText opacity-50 mb-3 sm:mb-4" />
+                <p className="text-lg sm:text-xl text-brandText font-semibold">
                   {currentNavCategoryObject ? `Nenhum item encontrado em ${currentNavCategoryObject.name}!` : 'Carregando itens...'}
                 </p>
-                <p className="text-itemDescriptionText opacity-75">Por favor, selecione outra categoria ou verifique a aba "Todos".</p>
+                <p className="text-itemDescriptionText opacity-75 text-sm sm:text-base">Por favor, selecione outra categoria ou verifique a aba "Todos".</p>
             </div>
         )}
         
@@ -234,7 +235,7 @@ const App = (): JSX.Element => {
       />
 
       {showAddedToCartMessage && (
-        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-brandText text-primary px-6 py-3 rounded-lg shadow-xl z-[100] text-center font-medium">
+        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-brandText text-primary px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg shadow-xl z-[100] text-center font-medium text-sm sm:text-base">
           {showAddedToCartMessage}
         </div>
       )}

@@ -25,15 +25,15 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onSelectPastel, categ
   };
 
   return (
-    <div className="bg-cardBg rounded-xl shadow-subtle hover:shadow-lifted flex flex-col transition-all duration-300 overflow-hidden group">
+    <div className="bg-cardBg rounded-xl shadow-subtle hover:shadow-lifted flex flex-col transition-all duration-300 overflow-hidden group border border-slate-200">
       {item.imageUrl && item.imageUrl !== IMGUR_PLACEHOLDER ? (
         <img 
           src={item.imageUrl} 
           alt={item.name} 
-          className="w-full h-60 sm:h-72 object-cover transition-transform duration-300 group-hover:scale-105" 
+          className="w-full h-52 sm:h-60 md:h-64 object-cover transition-transform duration-300 group-hover:scale-105" // Responsive image height
         />
       ) : (
-        <div className="w-full h-60 sm:h-72 bg-slate-200 flex items-center justify-center">
+        <div className="w-full h-52 sm:h-60 md:h-64 bg-slate-200 flex items-center justify-center"> {/* Responsive placeholder height */}
           <span className="text-slate-500 text-sm italic">
             {item.itemType === 'Bebida' ? 'Bebida' : 'Imagem Indisponível'}
           </span>

@@ -12,7 +12,7 @@ const StyledCategorySection: React.FC<StyledCategorySectionProps> = ({ category,
   if (items.length === 0) return null; 
 
   return (
-    <section id={category.id} className="mb-12"> 
+    <section id={category.id} className="mb-8 sm:mb-12"> 
       <div className="mb-6 p-4 rounded-lg shadow-subtle bg-cardBg border border-slate-200">
         <div className="flex flex-col sm:flex-row items-center justify-between">
             <h2 className="text-2xl sm:text-3xl font-semibold text-slate-700 mb-2 sm:mb-0">

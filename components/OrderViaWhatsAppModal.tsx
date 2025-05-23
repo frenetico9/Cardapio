@@ -111,11 +111,11 @@ const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
                     </div>
                     <div className="flex items-center">
                       <div className="flex items-center border border-slate-300 rounded-md mr-2">
-                        <button onClick={() => onUpdateQuantity(item.cartItemId, item.quantity - 1)} className="px-2 py-0.5 text-sm text-slate-600 hover:bg-slate-100 rounded-l-md" aria-label={`Diminuir ${item.name}`}>-</button>
-                        <span className="px-2 py-0.5 text-slate-700 text-xs">{item.quantity}</span>
-                        <button onClick={() => onUpdateQuantity(item.cartItemId, item.quantity + 1)} className="px-2 py-0.5 text-sm text-slate-600 hover:bg-slate-100 rounded-r-md" aria-label={`Aumentar ${item.name}`}>+</button>
+                        <button onClick={() => onUpdateQuantity(item.cartItemId, item.quantity - 1)} className="px-2.5 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-l-md" aria-label={`Diminuir ${item.name}`}>-</button>
+                        <span className="px-2 py-1.5 text-slate-700 text-xs min-w-[24px] text-center">{item.quantity}</span>
+                        <button onClick={() => onUpdateQuantity(item.cartItemId, item.quantity + 1)} className="px-2.5 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-r-md" aria-label={`Aumentar ${item.name}`}>+</button>
                       </div>
-                      <button onClick={() => onRemoveItem(item.cartItemId)} className="text-red-500 hover:text-red-700" aria-label={`Remover ${item.name}`}><TrashIcon className="text-xs"/></button>
+                      <button onClick={() => onRemoveItem(item.cartItemId)} className="text-red-500 hover:text-red-700 p-1" aria-label={`Remover ${item.name}`}><TrashIcon className="text-xs"/></button>
                     </div>
                   </div>
                 ))}
