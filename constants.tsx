@@ -8,7 +8,6 @@ export const StarIcon: React.FC<{ filled: boolean; className?: string }> = ({ fi
 );
 export const WhatsAppIcon: React.FC<{ className?: string }> = ({ className }) => <i className={`fab fa-whatsapp ${className || ''}`}></i>;
 export const PhoneIcon: React.FC<{ className?: string }> = ({ className }) => <i className={`fas fa-phone ${className || ''}`}></i>;
-export const PrintIcon: React.FC<{ className?: string }> = ({ className }) => <i className={`fas fa-print ${className || ''}`}></i>;
 // CartIcon will be replaced by WhatsAppIcon for the main FAB, but could be used internally if needed.
 // export const CartIcon: React.FC<{ className?: string }> = ({ className }) => <i className={`fas fa-shopping-cart ${className || ''}`}></i>;
 export const InstagramIcon: React.FC<{ className?: string }> = ({ className }) => <i className={`fab fa-instagram ${className || ''}`}></i>;

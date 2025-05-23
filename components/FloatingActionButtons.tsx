@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PrintIcon, WhatsAppIcon } from '../constants';
+import { WhatsAppIcon } from '../constants';
 
 interface FloatingActionButtonsProps {
   itemCount: number;
@@ -8,20 +8,9 @@ interface FloatingActionButtonsProps {
 }
 
 const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({ itemCount, onWhatsAppOrderClick }) => {
-  const handlePrint = () => {
-    window.print();
-  };
 
   return (
     <div className="fixed bottom-6 right-6 space-y-3 z-50">
-      <button
-        onClick={handlePrint}
-        title="Imprimir / Salvar como PDF"
-        aria-label="Imprimir cardápio"
-        className="bg-brandText hover:bg-opacity-80 text-primary w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-brandText"
-      >
-        <PrintIcon className="text-2xl" />
-      </button>
       <button
         onClick={onWhatsAppOrderClick}
         title="Revisar e Enviar Pedido via WhatsApp"
