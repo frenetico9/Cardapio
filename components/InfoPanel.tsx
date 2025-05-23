@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { RestaurantInfo, PaymentMethod } from '../types';
-import { WhatsAppIcon, PhoneIcon } from '../constants';
+import { WhatsAppIcon } from '../constants'; // PhoneIcon removed as it's no longer displayed
 
 interface InfoPanelProps {
   info: RestaurantInfo;
@@ -30,14 +30,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ info, paymentMethods }) => {
                 <WhatsAppIcon className="mr-2 text-2xl" /> WhatsApp: ({info.contact.whatsapp.substring(2, 4)}) {info.contact.whatsapp.substring(4, 9)}-{info.contact.whatsapp.substring(9)}
               </a>
             )}
-            {info.contact.phone && ( // This phone might be for calls, not orders if different from WhatsApp
-               <p className="flex items-center text-itemDescriptionText">
-                <PhoneIcon className="mr-2 text-brandText" /> Telefone: {info.contact.phone}
-               </p>
-            )}
-            <p className="text-itemDescriptionText mt-3">
-              <strong>Horário:</strong> {info.operatingHours}
-            </p>
+            {/* info.contact.phone and info.operatingHours removed from display as per request */}
           </div>
 
           {/* Payment Methods */}

@@ -30,13 +30,13 @@ export const RESTAURANT_INFO: RestaurantInfo = {
   logoUrl: "https://i.imgur.com/ELEXGD3.png",
   tagline1: "DA BEL",
   tagline2: "26CM",
-  operatingHours: "Ter-Dom: 10h às 22h",
+  operatingHours: "", // Removed as per request
   contact: {
-    phone: "+55 (XX) 9XXXX-XXXX", // Keep a display phone if different from WhatsApp order line
+    phone: "", // Removed as per request
     whatsapp: "5561991775501", // Formatted for wa.me link
     email: "contato@bigpasteldabel.com.br"
   },
-  address: "Rua do Sabor Pastel, 123, Vila Dourada, SP",
+  address: "Condomínio Entre Lagos 2 CL Lote 16", // Updated address
   socialMedia: {
     instagram: "https://instagram.com/bigpasteldabel",
     facebook: "https://facebook.com/bigpasteldabel"

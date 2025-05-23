@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { PrintIcon, WhatsAppIcon } from '../constants'; // Changed CartIcon to WhatsAppIcon
+import { PrintIcon, WhatsAppIcon } from '../constants';
 
 interface FloatingActionButtonsProps {
-  itemCount: number; // Renamed from cartItemCount for clarity as it's a general item count before order finalization
-  onWhatsAppOrderClick: () => void; // Renamed from onCartIconClick
+  itemCount: number;
+  onWhatsAppOrderClick: () => void;
 }
 
 const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({ itemCount, onWhatsAppOrderClick }) => {
@@ -23,12 +23,13 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({ itemCount
         <PrintIcon className="text-2xl" />
       </button>
       <button
-        onClick={onWhatsAppOrderClick} // Updated handler
-        title="Revisar e Enviar Pedido via WhatsApp" // Updated title
-        aria-label={`Revisar e Enviar Pedido via WhatsApp, ${itemCount} itens selecionados`} // Updated aria-label
-        className="bg-green-500 hover:bg-green-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-green-600 relative" // Changed color for WhatsApp
+        onClick={onWhatsAppOrderClick}
+        title="Revisar e Enviar Pedido via WhatsApp"
+        aria-label={`Revisar e Enviar Pedido via WhatsApp, ${itemCount} itens selecionados`}
+        className="bg-green-500 hover:bg-green-600 text-white h-14 px-4 rounded-full shadow-lg flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-green-600 relative"
       >
-        <WhatsAppIcon className="text-2xl" /> {/* Changed icon */}
+        <WhatsAppIcon className="text-2xl" />
+        <span className="font-semibold text-sm uppercase">Enviar Pedido</span>
         {itemCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-primary text-xs text-brandText font-bold rounded-full px-1.5 py-0.5 min-w-[20px] h-[20px] flex items-center justify-center">
             {itemCount}
