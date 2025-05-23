@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MenuItem, ItemType } from '../types';
 import { IMGUR_PLACEHOLDER } from '../constants';

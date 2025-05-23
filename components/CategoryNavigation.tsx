@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Category } from '../types';
 
@@ -10,7 +11,7 @@ interface CategoryNavigationProps {
 const CategoryNavigation: React.FC<CategoryNavigationProps> = ({ categories, activeCategory, onSelectCategory }) => {
   return (
     <nav className="bg-primary h-12"> {/* Height to match fixed setup, bg-primary for seamless look with Header */}
-      <div className="container mx-auto px-2 sm:px-4 flex items-center justify-center space-x-1 sm:space-x-2 overflow-x-auto h-full"> {/* Added justify-center */}
+      <div className="container mx-auto px-2 sm:px-4 flex items-center space-x-1 sm:space-x-2 overflow-x-auto h-full"> {/* Removed justify-center */}
         {categories.map(cat => (
           <button
             key={cat.id}
