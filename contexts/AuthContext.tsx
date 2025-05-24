@@ -1,15 +1,31 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { User, AuthContextType, UserRole } from '../types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Mock user database (in a real app, this would be a backend)
-const mockAdminUser: User = {
-  id: 'admin001',
-  email: 'isabelbrasil77@gmail.com',
-  role: 'admin',
-  isVerified: true,
+const mockAdminUsers: User[] = [
+  {
+    id: 'admin001',
+    email: 'isabelbrasil77@gmail.com',
+    role: 'admin',
+    isVerified: true,
+  },
+  {
+    id: 'admin002',
+    email: 'hiago182016@gmail.com',
+    role: 'admin',
+    isVerified: true,
+  }
+];
+// Hardcoded passwords for mock admins (in a real app, use hashed passwords and backend validation)
+const mockAdminPasswords: Record<string, string> = {
+  'isabelbrasil77@gmail.com': 'maisuncao',
+  'hiago182016@gmail.com': '180800',
 };
+
+
 let mockCustomerUsers: User[] = []; // In-memory store for registered customers
 let mockVerificationCodes: Record<string, string> = {}; // email: code
 
@@ -31,8 +47,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    if (email === mockAdminUser.email && password === 'maisuncao') {
-      setCurrentUser(mockAdminUser);
+    const adminUser = mockAdminUsers.find(admin => admin.email === email);
+    if (adminUser && mockAdminPasswords[email] === password) {
+      setCurrentUser(adminUser);
       setIsLoading(false);
       return true;
     }
@@ -61,7 +78,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setAuthError(null);
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    if (mockCustomerUsers.some(user => user.email === email) || email === mockAdminUser.email) {
+    if (mockCustomerUsers.some(user => user.email === email) || mockAdminUsers.some(admin => admin.email === email)) {
       setAuthError('Este e-mail já está registrado.');
       setIsLoading(false);
       return false;

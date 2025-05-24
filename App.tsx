@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -10,15 +11,61 @@ import InfoPanel from './components/InfoPanel';
 import SelectBordaModal from './components/SelectBordaModal';
 import AuthModal from './components/AuthModal'; 
 import AdminPanelModal from './components/AdminPanelModal';
-import CouponHighlightPopup from './components/CouponHighlightPopup'; // Novo
+import CouponHighlightPopup from './components/CouponHighlightPopup';
 import { AuthProvider, useAuth } from './contexts/AuthContext'; 
-import { RESTAURANT_INFO, NAV_CATEGORIES, ALL_MENU_ITEMS as INITIAL_MENU_ITEMS, AVAILABLE_PAYMENT_METHODS, AVAILABLE_BORDAS, AVAILABLE_COUPONS, InfoIcon } from './constants';
+import { RESTAURANT_INFO, NAV_CATEGORIES, ALL_MENU_ITEMS as CONST_INITIAL_MENU_ITEMS, AVAILABLE_PAYMENT_METHODS, AVAILABLE_BORDAS as CONST_AVAILABLE_BORDAS, AVAILABLE_COUPONS as CONST_AVAILABLE_COUPONS, InfoIcon } from './constants';
 import { MenuItem, CartItem, Coupon } from './types';
+
+const LOCAL_STORAGE_MENU_ITEMS_KEY = 'bigPastelMenuItems_v1';
+const LOCAL_STORAGE_COUPONS_KEY = 'bigPastelCoupons_v1';
+
+const getInitialAppData = () => {
+  let initialItems: MenuItem[] = [...CONST_INITIAL_MENU_ITEMS, ...CONST_AVAILABLE_BORDAS];
+  let initialCoupons: Coupon[] = CONST_AVAILABLE_COUPONS;
+
+  try {
+    const storedMenuItems = localStorage.getItem(LOCAL_STORAGE_MENU_ITEMS_KEY);
+    if (storedMenuItems) {
+      const parsedItems = JSON.parse(storedMenuItems) as MenuItem[];
+      // Basic validation: ensure it's an array and items have core properties
+      if (Array.isArray(parsedItems) && parsedItems.every(item => 'id' in item && 'name' in item && 'price' in item && 'isAvailable' in item && 'category' in item)) {
+        initialItems = parsedItems;
+      } else {
+        console.warn("Invalid menu items found in localStorage. Falling back to defaults and clearing stored data.");
+        localStorage.removeItem(LOCAL_STORAGE_MENU_ITEMS_KEY);
+      }
+    }
+  } catch (error) {
+    console.error("Error loading menu items from localStorage:", error);
+    localStorage.removeItem(LOCAL_STORAGE_MENU_ITEMS_KEY); // Clear potentially corrupted data
+  }
+
+  try {
+    const storedCoupons = localStorage.getItem(LOCAL_STORAGE_COUPONS_KEY);
+    if (storedCoupons) {
+      const parsedCoupons = JSON.parse(storedCoupons) as Coupon[];
+      if (Array.isArray(parsedCoupons) && parsedCoupons.every(coupon => 'id' in coupon && 'code' in coupon && 'value' in coupon)) {
+        initialCoupons = parsedCoupons;
+      } else {
+        console.warn("Invalid coupons found in localStorage. Falling back to defaults and clearing stored data.");
+        localStorage.removeItem(LOCAL_STORAGE_COUPONS_KEY);
+      }
+    }
+  } catch (error) {
+    console.error("Error loading coupons from localStorage:", error);
+    localStorage.removeItem(LOCAL_STORAGE_COUPONS_KEY); // Clear potentially corrupted data
+  }
+  return { initialItems, initialCoupons };
+};
+
 
 const AppContent: React.FC = () => {
   const { currentUser } = useAuth();
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(INITIAL_MENU_ITEMS);
-  const [coupons, setCoupons] = useState<Coupon[]>(AVAILABLE_COUPONS);
+  const { initialItems: loadedInitialItems, initialCoupons: loadedInitialCoupons } = getInitialAppData();
+  
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(loadedInitialItems);
+  const [coupons, setCoupons] = useState<Coupon[]>(loadedInitialCoupons);
+  
   const [activeCategory, setActiveCategory] = useState<string>(NAV_CATEGORIES[0]?.id || 'all');
   const [itemsToDisplay, setItemsToDisplay] = useState<MenuItem[]>([]);
   
@@ -41,12 +88,32 @@ const AppContent: React.FC = () => {
 
   const fixedHeaderHeightClasses = "pt-[160px] sm:pt-[208px]"; 
 
+  // Persist menuItems to localStorage
   useEffect(() => {
-    const availableItems = menuItems.filter(item => item.itemType !== 'Borda'); 
+    try {
+      localStorage.setItem(LOCAL_STORAGE_MENU_ITEMS_KEY, JSON.stringify(menuItems));
+    } catch (error) {
+      console.error("Error saving menu items to localStorage:", error);
+    }
+  }, [menuItems]);
+
+  // Persist coupons to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_COUPONS_KEY, JSON.stringify(coupons));
+    } catch (error) {
+      console.error("Error saving coupons to localStorage:", error);
+    }
+  }, [coupons]);
+
+
+  useEffect(() => {
+    // Filter out 'Borda' type items for general display, they are handled by SelectBordaModal
+    const displayableItems = menuItems.filter(item => item.itemType !== 'Borda'); 
     if (activeCategory === 'all') {
-      setItemsToDisplay(availableItems);
+      setItemsToDisplay(displayableItems);
     } else {
-      setItemsToDisplay(availableItems.filter(item => item.category === activeCategory));
+      setItemsToDisplay(displayableItems.filter(item => item.category === activeCategory));
     }
   }, [activeCategory, menuItems]);
 
@@ -60,25 +127,25 @@ const AppContent: React.FC = () => {
 
     const activeCoupons = coupons.filter(c => c.isActive);
     if (activeCoupons.length > 0) {
-      // Prioritize coupons with an expiry date
       let bestCoupon = activeCoupons.find(c => c.expiryDate);
       if (!bestCoupon) {
-        // If none with expiry, pick one with a description
         bestCoupon = activeCoupons.find(c => c.description);
       }
       if (!bestCoupon) {
-        // If still none, pick the first active one
         bestCoupon = activeCoupons[0];
       }
       
       if (bestCoupon) {
         setHighlightedCoupon(bestCoupon);
-        // Delay showing the popup slightly for a better UX
         const timer = setTimeout(() => setIsCouponPopupVisible(true), 1500);
         return () => clearTimeout(timer);
+      } else {
+        setIsCouponPopupVisible(false); // Ensure popup is hidden if no suitable coupon
       }
+    } else {
+        setIsCouponPopupVisible(false); // Ensure popup is hidden if no active coupons
     }
-  }, [coupons]); // Re-run if coupons list changes
+  }, [coupons]);
 
   const handleCloseCouponPopup = () => {
     setIsCouponPopupVisible(false);
@@ -133,23 +200,29 @@ const AppContent: React.FC = () => {
   };
   
   const handleConfirmBordaSelection = (pastel: MenuItem, chosenBorda?: MenuItem) => {
-    if (!pastel.isAvailable) {
+    // Re-check availability from the main menuItems state
+    const currentPastelState = menuItems.find(mi => mi.id === pastel.id);
+    if (!currentPastelState || !currentPastelState.isAvailable) {
         setIsBordaModalOpen(false);
         setCurrentPastelForBorda(undefined);
         setShowAddedToCartMessage(`${pastel.name} ficou indisponível.`);
         setTimeout(() => setShowAddedToCartMessage(null), 3000);
         return;
     }
-    if (chosenBorda && !AVAILABLE_BORDAS.find(b => b.id === chosenBorda.id)?.isAvailable) {
-       setIsBordaModalOpen(false);
-       setCurrentPastelForBorda(undefined);
-       setShowAddedToCartMessage(`A borda ${chosenBorda.name} ficou indisponível.`);
-       setTimeout(() => setShowAddedToCartMessage(null), 3000);
-       return;
+    if (chosenBorda) {
+        const currentBordaState = menuItems.find(mi => mi.id === chosenBorda.id);
+        if (!currentBordaState || !currentBordaState.isAvailable) {
+           setIsBordaModalOpen(false);
+           setCurrentPastelForBorda(undefined);
+           setShowAddedToCartMessage(`A borda ${chosenBorda.name} ficou indisponível.`);
+           setTimeout(() => setShowAddedToCartMessage(null), 3000);
+           return;
+        }
     }
 
+
     const cartItemId = pastel.id + (chosenBorda ? `_${chosenBorda.id}` : '_no_borda');
-    const basePastelName = pastel.name;
+    const basePastelName = pastel.name; // Use the original pastel name
     const bordaDisplayName = chosenBorda ? chosenBorda.name : '';
   
     let displayNameInCart = basePastelName;
@@ -171,14 +244,14 @@ const AppContent: React.FC = () => {
       return [
         ...prevItems,
         {
-          ...pastel, 
+          ...pastel, // Base pastel details
           cartItemId: cartItemId,
           baseItemName: basePastelName,
-          name: displayNameInCart,
+          name: displayNameInCart, // Composite name for display in cart
           quantity: 1,
           selectedBorda: chosenBorda,
-          price: pastel.price + (chosenBorda?.price || 0), 
-          imageUrl: pastel.imageUrl 
+          price: pastel.price + (chosenBorda?.price || 0), // Final price including borda
+          imageUrl: pastel.imageUrl // Ensure imageUrl from base pastel is used
         },
       ];
     });
@@ -234,11 +307,16 @@ const AppContent: React.FC = () => {
         alert("Já existe um cupom com este código."); 
         return false; 
     }
-    setCoupons(prevCoupons => [...prevCoupons, { ...coupon, id: `coupon_${Date.now()}` }]);
+    setCoupons(prevCoupons => [...prevCoupons, { ...coupon, id: `coupon_${Date.now()}_${Math.random().toString(36).substring(2,7)}` }]);
     return true; 
   };
 
   const updateCoupon = (updatedCoupon: Coupon) => {
+     // Check for duplicate code if the code is being changed
+    if (coupons.some(c => c.id !== updatedCoupon.id && c.code.toUpperCase() === updatedCoupon.code.toUpperCase())) {
+        alert("Outro cupom já utiliza este código.");
+        return false;
+    }
     setCoupons(prevCoupons => 
       prevCoupons.map(c => c.id === updatedCoupon.id ? updatedCoupon : c)
     );
@@ -255,6 +333,7 @@ const AppContent: React.FC = () => {
 
 
   const currentNavCategoryObject = NAV_CATEGORIES.find(cat => cat.id === activeCategory);
+  const availableBordasForModal = menuItems.filter(item => item.itemType === 'Borda' && item.isAvailable);
 
   return (
     <div id="app-container" className="flex flex-col min-h-screen font-sans">
@@ -276,8 +355,8 @@ const AppContent: React.FC = () => {
         
         {activeCategory === 'all' ? (
           NAV_CATEGORIES.filter(cat => cat.id !== 'all').map(loopCategory => {
-            if (loopCategory.id === 'bordas') return null; 
-            const itemsForThisCategory = menuItems.filter(item => item.category === loopCategory.id && item.itemType !== 'Borda');
+            // For 'all' view, items are filtered from the main menuItems state (which already excludes 'Borda' type for displayableItems)
+            const itemsForThisCategory = itemsToDisplay.filter(item => item.category === loopCategory.id);
             return (
               <StyledCategorySection
                 key={loopCategory.id}
@@ -291,7 +370,7 @@ const AppContent: React.FC = () => {
           <StyledCategorySection
             key={currentNavCategoryObject.id}
             category={currentNavCategoryObject}
-            items={itemsToDisplay} 
+            items={itemsToDisplay} // itemsToDisplay is already filtered by activeCategory and excludes 'Borda' type
             onSelectPastel={handleSelectPastelOrAddItem}
           />
         ) : (
@@ -324,7 +403,7 @@ const AppContent: React.FC = () => {
             setCurrentPastelForBorda(undefined);
           }}
           pastel={currentPastelForBorda}
-          bordas={AVAILABLE_BORDAS.filter(b => b.isAvailable)} 
+          bordas={availableBordasForModal} // Pass bordas from persisted state
           onConfirm={handleConfirmBordaSelection}
         />
       )}
@@ -348,7 +427,7 @@ const AppContent: React.FC = () => {
         <AdminPanelModal
           isOpen={isAdminPanelOpen}
           onClose={() => setIsAdminPanelOpen(false)}
-          menuItems={menuItems}
+          menuItems={menuItems} // Pass all menu items, including bordas
           coupons={coupons}
           onToggleItemAvailability={toggleItemAvailability}
           onAddCoupon={addCoupon}
