@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { RestaurantInfo, Category, MenuItem, Promotion, CustomerReview, PaymentMethod, Coupon } from './types';
 
@@ -30,6 +31,7 @@ export const CalendarIcon: React.FC<{ className?: string }> = ({ className }) =>
 export const CheckCircleIcon: React.FC<{ className?: string }> = ({ className }) => <i className={`fas fa-check-circle ${className || ''}`}></i>;
 export const BanIcon: React.FC<{ className?: string }> = ({ className }) => <i className={`fas fa-ban ${className || ''}`}></i>;
 export const GiftIcon: React.FC<{ className?: string }> = ({ className }) => <i className={`fas fa-gift ${className || ''}`}></i>;
+export const SaveIcon: React.FC<{ className?: string }> = ({ className }) => <i className={`fas fa-save ${className || ''}`}></i>;
 
 
 // --- INFORMAÇÕES DO RESTAURANTE ---
@@ -69,7 +71,7 @@ export const IMGUR_PLACEHOLDER = "IMGUR_ITEM_IMAGE_URL_HERE"; // For actual past
 const IMGUR_DRINK_PLACEHOLDER = "https://i.imgur.com/tqVqFoa.png"; // Generic drink placeholder
 
 // --- BORDAS DISPONÍVEIS (PARA O MODAL DE SELEÇÃO) ---
-export const AVAILABLE_BORDAS: MenuItem[] = [
+export const CONST_AVAILABLE_BORDAS: MenuItem[] = [
   {
     id: "borda_cheddar", name: "CHEDDAR", description: "Borda recheada com cheddar cremoso.", price: 0.00,
     category: "borda_option", itemType: "Borda", isAvailable: true,
@@ -86,7 +88,7 @@ export const AVAILABLE_BORDAS: MenuItem[] = [
 
 
 // --- TODOS OS ITENS DO MENU (PASTÉIS E BEBIDAS) ---
-export const ALL_MENU_ITEMS: MenuItem[] = [
+export const CONST_INITIAL_MENU_ITEMS: MenuItem[] = [
   // Pastéis Salgados - R$ 17,00
   {
     id: "pastel_queijo", name: "QUEIJO", description: "Mussarela de primeira qualidade.", price: 17.00,
@@ -175,7 +177,7 @@ export const AVAILABLE_PAYMENT_METHODS: PaymentMethod[] = [
 ];
 
 // --- CUPONS DISPONÍVEIS (MOCK) ---
-export const AVAILABLE_COUPONS: Coupon[] = [
+export const CONST_AVAILABLE_COUPONS: Coupon[] = [
   { 
     id: 'cupom1', 
     code: 'BEMVINDO10', 

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { MenuItem, Coupon } from '../types';
-import { CloseIcon, TagIcon, InfoIcon, ToggleOnIcon, ToggleOffIcon, PlusCircleIcon, EditIcon, TrashIcon, CalendarIcon, CheckCircleIcon, BanIcon } from '../constants';
+import { CloseIcon, TagIcon, InfoIcon, ToggleOnIcon, ToggleOffIcon, PlusCircleIcon, EditIcon, TrashIcon, CalendarIcon, CheckCircleIcon, BanIcon, SaveIcon } from '../constants'; // Adicionado SaveIcon
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -8,14 +9,18 @@ interface AdminPanelModalProps {
   menuItems: MenuItem[];
   coupons: Coupon[];
   onToggleItemAvailability: (itemId: string) => void;
-  // Fix: Changed return type to Promise<boolean> to align with async function in App.tsx
-  onAddCoupon: (coupon: Omit<Coupon, 'id'>) => Promise<boolean>; 
-  // Fix: Changed return type to Promise<boolean> to align with async function in App.tsx
-  onUpdateCoupon: (coupon: Coupon) => Promise<boolean>;
+  onAddCoupon: (coupon: Omit<Coupon, 'id'>) => Promise<boolean>; // Mantém Promise para feedback local
+  onUpdateCoupon: (coupon: Coupon) => Promise<boolean>; // Mantém Promise para feedback local
   onToggleCouponActivity: (couponId: string) => void;
+  onSaveChangesToServer: () => Promise<{success: boolean, message: string}>; // Nova prop
 }
 
 type AdminPanelView = 'items' | 'coupons';
+
+interface ServerSaveStatus {
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
 
 const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   isOpen,
@@ -26,10 +31,10 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   onAddCoupon,
   onUpdateCoupon,
   onToggleCouponActivity,
+  onSaveChangesToServer, // Nova prop
 }) => {
   const [activeView, setActiveView] = useState<AdminPanelView>('items');
   
-  // Coupon Form State
   const [isCouponFormVisible, setIsCouponFormVisible] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [couponCode, setCouponCode] = useState('');
@@ -41,10 +46,16 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [couponIsActive, setCouponIsActive] = useState(true);
   const [couponFormError, setCouponFormError] = useState<string | null>(null);
 
+  const [isSavingToServer, setIsSavingToServer] = useState(false);
+  const [serverSaveStatus, setServerSaveStatus] = useState<ServerSaveStatus | null>(null);
+
+
   useEffect(() => {
     if (isOpen) {
-      setActiveView('items'); // Reset view when modal opens
+      setActiveView('items'); 
       resetCouponForm();
+      setServerSaveStatus(null); // Limpa status de save ao abrir
+      setIsSavingToServer(false);
     }
   }, [isOpen]);
 
@@ -72,12 +83,13 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setCouponIsActive(coupon.isActive);
     setIsCouponFormVisible(true);
     setCouponFormError(null);
+    setServerSaveStatus(null); // Limpa status ao editar
   };
 
-  // Fix: Made function async to await promises from onAddCoupon/onUpdateCoupon
   const handleCouponFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCouponFormError(null);
+    setServerSaveStatus(null);
 
     if (!couponCode.trim() || couponValue === '' || couponValue <= 0) {
       setCouponFormError('Código do cupom e valor do desconto (maior que zero) são obrigatórios.');
@@ -88,7 +100,7 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       return;
     }
 
-    const newCouponData: Omit<Coupon, 'id'> & { id?: string } = {
+    const couponDetails: Omit<Coupon, 'id'> & { id?: string } = {
       code: couponCode.trim(),
       description: couponDescription.trim() || undefined,
       discountType: couponDiscountType,
@@ -98,27 +110,28 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       minOrderValue: couponMinOrderValue !== '' ? Number(couponMinOrderValue) : undefined,
     };
 
-    let success = false;
+    let successLocally = false;
     if (editingCoupon) {
-        // Fix: Awaited the result of onUpdateCoupon
-        success = await onUpdateCoupon({ ...editingCoupon, ...newCouponData });
+        successLocally = await onUpdateCoupon({ ...editingCoupon, ...couponDetails });
     } else {
-        // Fix: Awaited the result of onAddCoupon
-        success = await onAddCoupon(newCouponData as Omit<Coupon, 'id'>); // ID will be added by parent
+        successLocally = await onAddCoupon(couponDetails as Omit<Coupon, 'id'>);
     }
     
-    if (success) {
+    if (successLocally) {
       resetCouponForm();
+      setServerSaveStatus({ message: `Cupom ${editingCoupon ? 'atualizado' : 'adicionado'} localmente. Salve todas as alterações no servidor.`, type: 'info' });
     } else {
-      // Error messages are more specific now based on whether it's an add or update operation.
-      if (editingCoupon) {
-        setCouponFormError('Falha ao atualizar o cupom. Outro cupom pode já utilizar este código.');
-      } else { 
-        setCouponFormError('Falha ao adicionar o cupom. Verifique se o código já existe.');
-      }
+      setCouponFormError(`Falha ao ${editingCoupon ? 'atualizar' : 'adicionar'} o cupom localmente. Verifique se o código já existe.`);
     }
   };
 
+  const handleServerSave = async () => {
+    setIsSavingToServer(true);
+    setServerSaveStatus(null);
+    const result = await onSaveChangesToServer();
+    setServerSaveStatus({ message: result.message, type: result.success ? 'success' : 'error' });
+    setIsSavingToServer(false);
+  };
 
   if (!isOpen) return null;
 
@@ -132,7 +145,7 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             <p className={`text-xs ${item.isAvailable ? 'text-slate-500' : 'text-slate-400'}`}>R$ {item.price.toFixed(2).replace('.', ',')} - Cat: {item.category}</p>
           </div>
           <button
-            onClick={() => onToggleItemAvailability(item.id)}
+            onClick={() => { onToggleItemAvailability(item.id); setServerSaveStatus(null); }}
             title={item.isAvailable ? 'Marcar como Indisponível' : 'Marcar como Disponível'}
             className={`p-2 rounded-md transition-colors ${item.isAvailable ? 'text-green-500 hover:bg-green-50' : 'text-red-500 hover:bg-red-50'}`}
           >
@@ -147,7 +160,7 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     <div className="space-y-4">
       <div className="flex justify-end">
         <button 
-            onClick={() => { resetCouponForm(); setIsCouponFormVisible(true); }}
+            onClick={() => { resetCouponForm(); setIsCouponFormVisible(true); setServerSaveStatus(null); }}
             className="bg-vibrantOrange hover:bg-vibrantOrangeHover text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all text-sm flex items-center"
         >
           <PlusCircleIcon className="mr-2" /> Criar Novo Cupom
@@ -195,7 +208,7 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
           <div className="flex items-center justify-end space-x-3 pt-2">
             <button type="button" onClick={resetCouponForm} className="text-sm text-slate-600 hover:text-slate-800 py-2 px-3 rounded-md">Cancelar</button>
             <button type="submit" className="bg-primary hover:bg-primaryHover text-brandText font-semibold py-2 px-4 rounded-lg shadow-sm text-sm">
-              {editingCoupon ? 'Atualizar Cupom' : 'Salvar Cupom'}
+              {editingCoupon ? 'Atualizar Cupom Localmente' : 'Salvar Cupom Localmente'}
             </button>
           </div>
         </form>
@@ -227,7 +240,7 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
               </div>
               <div className="flex flex-col items-end space-y-1.5 ml-2">
                 <button
-                  onClick={() => onToggleCouponActivity(coupon.id)}
+                  onClick={() => { onToggleCouponActivity(coupon.id); setServerSaveStatus(null); }}
                   title={coupon.isActive ? 'Desativar Cupom' : 'Ativar Cupom'}
                   className={`p-1.5 rounded-md transition-colors text-xl ${coupon.isActive ? 'text-green-500 hover:bg-green-50' : 'text-red-500 hover:bg-red-50'}`}
                 >
@@ -248,11 +261,10 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     </div>
   );
 
-
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[80] p-2 sm:p-4 transition-opacity duration-300 ease-in-out font-sans"
-      onClick={onClose} // Allow closing by clicking backdrop
+      onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="admin-panel-modal-title"
@@ -274,24 +286,42 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
         <div className="flex border-b border-slate-300">
           <button 
-            onClick={() => setActiveView('items')}
+            onClick={() => { setActiveView('items'); setServerSaveStatus(null); }}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${activeView === 'items' ? 'bg-primary text-brandText border-b-2 border-brandText' : 'text-slate-600 hover:bg-slate-100'}`}
           >
             Gerenciar Itens do Cardápio
           </button>
           <button 
-            onClick={() => setActiveView('coupons')}
+            onClick={() => { setActiveView('coupons'); setServerSaveStatus(null); }}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${activeView === 'coupons' ? 'bg-primary text-brandText border-b-2 border-brandText' : 'text-slate-600 hover:bg-slate-100'}`}
           >
             Gerenciar Cupons de Desconto
           </button>
         </div>
+        
+        {serverSaveStatus && (
+            <div className={`p-3 text-center text-sm font-medium
+                ${serverSaveStatus.type === 'success' ? 'bg-green-100 text-green-700' : ''}
+                ${serverSaveStatus.type === 'error' ? 'bg-red-100 text-red-700' : ''}
+                ${serverSaveStatus.type === 'info' ? 'bg-blue-100 text-blue-700' : ''}
+            `}>
+                {serverSaveStatus.message}
+            </div>
+        )}
 
         <div className="p-4 sm:p-6 overflow-y-auto flex-grow">
           {activeView === 'items' && renderItemManagement()}
           {activeView === 'coupons' && renderCouponManagement()}
         </div>
-         <div className="p-3 bg-slate-100 border-t border-slate-300 text-right">
+
+         <div className="p-3 bg-slate-100 border-t border-slate-300 flex justify-between items-center">
+            <button
+                onClick={handleServerSave}
+                disabled={isSavingToServer}
+                className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm text-sm flex items-center disabled:opacity-70"
+            >
+                <SaveIcon className="mr-2"/> {isSavingToServer ? 'Salvando no Servidor...' : 'Salvar Alterações no Servidor'}
+            </button>
             <button
                 onClick={onClose}
                 className="bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm text-sm"

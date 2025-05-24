@@ -1,6 +1,5 @@
 
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import StyledCategorySection from './components/StyledCategorySection';
@@ -14,15 +13,16 @@ import AuthModal from './components/AuthModal';
 import AdminPanelModal from './components/AdminPanelModal';
 import CouponHighlightPopup from './components/CouponHighlightPopup';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { RESTAURANT_INFO, NAV_CATEGORIES, ALL_MENU_ITEMS as CONST_INITIAL_MENU_ITEMS, AVAILABLE_PAYMENT_METHODS, AVAILABLE_BORDAS as CONST_AVAILABLE_BORDAS, AVAILABLE_COUPONS as CONST_AVAILABLE_COUPONS, InfoIcon } from './constants';
+import { RESTAURANT_INFO, NAV_CATEGORIES, AVAILABLE_PAYMENT_METHODS, InfoIcon, CONST_INITIAL_MENU_ITEMS, CONST_AVAILABLE_COUPONS, CONST_AVAILABLE_BORDAS } from './constants';
 import { MenuItem, CartItem, Coupon } from './types';
 
-// Chaves de localStorage removidas, pois os dados agora seriam gerenciados por um backend.
+const APP_DATA_BLOB_PATH = 'data/app_data.json'; // Define um caminho padrão no Blob
 
 const AppContent: React.FC = () => {
   const { currentUser } = useAuth();
 
   const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
+  const [dataError, setDataError] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
 
@@ -46,32 +46,33 @@ const AppContent: React.FC = () => {
 
   const fixedHeaderHeightClasses = "pt-[160px] sm:pt-[208px]";
 
-  // Simular carregamento inicial de dados de uma API
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setIsDataLoading(true);
-      console.log("SIMULATING API CALL: GET /api/menu-items");
-      console.log("SIMULATING API CALL: GET /api/coupons");
-      // Simula um delay da API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Em uma aplicação real, você usaria fetch() para chamar suas Serverless Functions.
-      // Ex: const menuResponse = await fetch('/api/menu-items');
-      //     const menuData = await menuResponse.json();
-      //     setMenuItems(menuData);
-      //
-      //     const couponResponse = await fetch('/api/coupons');
-      //     const couponData = await couponResponse.json();
-      //     setCoupons(couponData);
-
-      // Usando dados constantes para simulação:
-      setMenuItems([...CONST_INITIAL_MENU_ITEMS, ...CONST_AVAILABLE_BORDAS]);
-      setCoupons(CONST_AVAILABLE_COUPONS);
+  const fetchAppData = useCallback(async () => {
+    setIsDataLoading(true);
+    setDataError(null);
+    try {
+      console.log("Fetching app data from /api/app-data");
+      const response = await fetch('/api/app-data');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to fetch app data: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setMenuItems(data.menuItems || []);
+      setCoupons(data.coupons || []);
+    } catch (error) {
+      console.error("Error fetching app data:", error);
+      setDataError((error as Error).message);
+      // Fallback to constants if API fails critically for the first load
+      if (menuItems.length === 0) setMenuItems([...CONST_INITIAL_MENU_ITEMS, ...CONST_AVAILABLE_BORDAS]);
+      if (coupons.length === 0) setCoupons(CONST_AVAILABLE_COUPONS);
+    } finally {
       setIsDataLoading(false);
-    };
+    }
+  }, [menuItems.length, coupons.length]); // Dependencies to avoid re-fetching if already populated by fallback
 
-    fetchInitialData();
-  }, []);
+  useEffect(() => {
+    fetchAppData();
+  }, [fetchAppData]);
 
 
   useEffect(() => {
@@ -93,23 +94,16 @@ const AppContent: React.FC = () => {
     const activeCoupons = coupons.filter(c => c.isActive);
     if (activeCoupons.length > 0) {
       let bestCoupon = activeCoupons.find(c => c.expiryDate);
-      if (!bestCoupon) {
-        bestCoupon = activeCoupons.find(c => c.description);
-      }
-      if (!bestCoupon) {
-        bestCoupon = activeCoupons[0];
-      }
+      if (!bestCoupon) bestCoupon = activeCoupons.find(c => c.description);
+      if (!bestCoupon) bestCoupon = activeCoupons[0];
       
       if (bestCoupon) {
         setHighlightedCoupon(bestCoupon);
-        const timer = setTimeout(() => setIsCouponPopupVisible(true), isDataLoading ? 2500 : 1500); // Delay longer if still loading
+        const timer = setTimeout(() => setIsCouponPopupVisible(true), isDataLoading ? 2500 : 1500);
         return () => clearTimeout(timer);
-      } else {
-        setIsCouponPopupVisible(false);
       }
-    } else {
-        setIsCouponPopupVisible(false);
     }
+    setIsCouponPopupVisible(false);
   }, [coupons, isDataLoading]);
 
   const handleCloseCouponPopup = () => {
@@ -121,11 +115,8 @@ const AppContent: React.FC = () => {
   const handleCategorySelect = (categoryId: string) => {
     setActiveCategory(categoryId);
     const mainContentArea = document.querySelector('main');
-    if (mainContentArea) {
-        mainContentArea.scrollTop = 0;
-    } else {
-        window.scrollTo(0,0);
-    }
+    if (mainContentArea) mainContentArea.scrollTop = 0;
+    else window.scrollTo(0,0);
   };
 
   const handleSelectPastelOrAddItem = (item: MenuItem) => {
@@ -140,26 +131,14 @@ const AppContent: React.FC = () => {
       setIsBordaModalOpen(true);
     } else {
       const cartItemId = item.id + '_direct';
-      const message = `${item.name} adicionado à seleção!`;
-      setShowAddedToCartMessage(message);
+      setShowAddedToCartMessage(`${item.name} adicionado à seleção!`);
       setTimeout(() => setShowAddedToCartMessage(null), 2000);
-
       setSelectedItems(prevItems => {
         const existingItem = prevItems.find(ci => ci.cartItemId === cartItemId);
         if (existingItem) {
-          return prevItems.map(ci =>
-            ci.cartItemId === cartItemId ? { ...ci, quantity: ci.quantity + 1 } : ci
-          );
+          return prevItems.map(ci => ci.cartItemId === cartItemId ? { ...ci, quantity: ci.quantity + 1 } : ci);
         }
-        return [
-          ...prevItems,
-          {
-            ...item,
-            cartItemId: cartItemId,
-            baseItemName: item.name,
-            quantity: 1,
-          },
-        ];
+        return [...prevItems, { ...item, cartItemId, baseItemName: item.name, quantity: 1 }];
       });
     }
   };
@@ -186,37 +165,17 @@ const AppContent: React.FC = () => {
 
     const cartItemId = pastel.id + (chosenBorda ? `_${chosenBorda.id}` : '_no_borda');
     const basePastelName = pastel.name;
-    const bordaDisplayName = chosenBorda ? chosenBorda.name : '';
+    let displayNameInCart = basePastelName + (chosenBorda ? ` (Borda: ${chosenBorda.name})` : '');
   
-    let displayNameInCart = basePastelName;
-    if (chosenBorda) {
-      displayNameInCart += ` (Borda: ${bordaDisplayName})`;
-    }
-  
-    const message = `${displayNameInCart} adicionado à seleção!`;
-    setShowAddedToCartMessage(message);
+    setShowAddedToCartMessage(`${displayNameInCart} adicionado à seleção!`);
     setTimeout(() => setShowAddedToCartMessage(null), 2500);
   
     setSelectedItems(prevItems => {
       const existingItem = prevItems.find(ci => ci.cartItemId === cartItemId);
       if (existingItem) {
-        return prevItems.map(ci =>
-          ci.cartItemId === cartItemId ? { ...ci, quantity: ci.quantity + 1 } : ci
-        );
+        return prevItems.map(ci => ci.cartItemId === cartItemId ? { ...ci, quantity: ci.quantity + 1 } : ci);
       }
-      return [
-        ...prevItems,
-        {
-          ...pastel,
-          cartItemId: cartItemId,
-          baseItemName: basePastelName,
-          name: displayNameInCart,
-          quantity: 1,
-          selectedBorda: chosenBorda,
-          price: pastel.price + (chosenBorda?.price || 0),
-          imageUrl: pastel.imageUrl
-        },
-      ];
+      return [...prevItems, { ...pastel, cartItemId, baseItemName: basePastelName, name: displayNameInCart, quantity: 1, selectedBorda: chosenBorda, price: pastel.price + (chosenBorda?.price || 0), imageUrl: pastel.imageUrl }];
     });
   
     setIsBordaModalOpen(false);
@@ -228,23 +187,12 @@ const AppContent: React.FC = () => {
   };
 
   const handleUpdateSelectedItemQuantity = (cartItemIdToUpdate: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      handleRemoveSelectedItem(cartItemIdToUpdate);
-    } else {
-      setSelectedItems(prevItems =>
-        prevItems.map(item => (item.cartItemId === cartItemIdToUpdate ? { ...item, quantity: newQuantity } : item))
-      );
-    }
+    if (newQuantity <= 0) handleRemoveSelectedItem(cartItemIdToUpdate);
+    else setSelectedItems(prevItems => prevItems.map(item => (item.cartItemId === cartItemIdToUpdate ? { ...item, quantity: newQuantity } : item)));
   };
 
-  const calculateSubtotalAmount = (): number => {
-    return selectedItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  };
-
-  const getSelectedItemCount = (): number => {
-    return selectedItems.reduce((count, item) => count + item.quantity, 0);
-  };
-
+  const calculateSubtotalAmount = (): number => selectedItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const getSelectedItemCount = (): number => selectedItems.reduce((count, item) => count + item.quantity, 0);
   const toggleWhatsAppModal = () => setIsWhatsAppModalOpen(!isWhatsAppModalOpen);
   
   const handleWhatsAppOrderSent = () => {
@@ -256,84 +204,72 @@ const AppContent: React.FC = () => {
     setTimeout(() => setShowAddedToCartMessage(null), 4000);
   };
 
-  // Admin Panel Logic - agora simula chamadas de API
-  const toggleItemAvailability = async (itemId: string) => {
-    const itemToToggle = menuItems.find(item => item.id === itemId);
-    if (!itemToToggle) return;
-
-    const newAvailability = !itemToToggle.isAvailable;
-    // Simula chamada de API
-    // Em uma app real: const response = await fetch(`/api/admin/menu-items/${itemId}/availability`, { method: 'PUT', body: JSON.stringify({ isAvailable: newAvailability }), headers: {'Content-Type': 'application/json'} });
-    // if (response.ok) { /* atualiza estado */ } else { /* trata erro */ }
-    console.log(`SIMULATING API CALL: PUT /api/admin/menu-items/${itemId}/availability - Payload: { isAvailable: ${newAvailability} }`);
-    
-    // Atualização otimista do estado
-    setMenuItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId ? { ...item, isAvailable: newAvailability } : item
-      )
-    );
+  // Admin Panel Logic - Local updates, server save is separate
+  const toggleItemAvailability = (itemId: string) => {
+    setMenuItems(prevItems => prevItems.map(item => item.id === itemId ? { ...item, isAvailable: !item.isAvailable } : item));
   };
 
-  const addCoupon = async (couponData: Omit<Coupon, 'id'>): Promise<boolean> => {
-    if (coupons.some(c => c.code.toUpperCase() === couponData.code.toUpperCase())) {
-        // alert("Já existe um cupom com este código."); // Alert will be handled in AdminPanelModal based on return
-        return false;
-    }
-    
+  const addCoupon = (couponData: Omit<Coupon, 'id'>): Promise<boolean> => {
+    if (coupons.some(c => c.code.toUpperCase() === couponData.code.toUpperCase())) return Promise.resolve(false);
     const newCouponWithId = { ...couponData, id: `coupon_${Date.now()}_${Math.random().toString(36).substring(2,7)}` };
-    
-    // Simula chamada de API
-    // Em uma app real: const response = await fetch('/api/admin/coupons', { method: 'POST', body: JSON.stringify(newCouponWithId), headers: {'Content-Type': 'application/json'} });
-    // const addedCoupon = await response.json(); // API retornaria o cupom com ID do banco
-    // if (response.ok) { setCoupons(prev => [...prev, addedCoupon]); return true; } else { /* trata erro */; return false; }
-    console.log(`SIMULATING API CALL: POST /api/admin/coupons - Payload:`, newCouponWithId);
-
-    // Atualização otimista
     setCoupons(prevCoupons => [...prevCoupons, newCouponWithId]);
-    return true;
+    return Promise.resolve(true);
   };
 
-  const updateCoupon = async (updatedCoupon: Coupon): Promise<boolean> => {
-    if (coupons.some(c => c.id !== updatedCoupon.id && c.code.toUpperCase() === updatedCoupon.code.toUpperCase())) {
-        // alert("Outro cupom já utiliza este código."); // Alert will be handled in AdminPanelModal based on return
-        return false;
-    }
-
-    // Simula chamada de API
-    // Em uma app real: const response = await fetch(`/api/admin/coupons/${updatedCoupon.id}`, { method: 'PUT', body: JSON.stringify(updatedCoupon), headers: {'Content-Type': 'application/json'} });
-    // if (response.ok) { /* atualiza estado */ return true; } else { /* trata erro */; return false; }
-    console.log(`SIMULATING API CALL: PUT /api/admin/coupons/${updatedCoupon.id} - Payload:`, updatedCoupon);
-    
-    // Atualização otimista
-    setCoupons(prevCoupons =>
-      prevCoupons.map(c => c.id === updatedCoupon.id ? updatedCoupon : c)
-    );
-    return true;
+  const updateCoupon = (updatedCoupon: Coupon): Promise<boolean> => {
+    if (coupons.some(c => c.id !== updatedCoupon.id && c.code.toUpperCase() === updatedCoupon.code.toUpperCase())) return Promise.resolve(false);
+    setCoupons(prevCoupons => prevCoupons.map(c => c.id === updatedCoupon.id ? updatedCoupon : c));
+    return Promise.resolve(true);
   }
 
-  const toggleCouponActivity = async (couponId: string) => {
-    const couponToToggle = coupons.find(c => c.id === couponId);
-    if (!couponToToggle) return;
-
-    const newActivityState = !couponToToggle.isActive;
-    // Simula chamada de API
-    // Em uma app real: const response = await fetch(`/api/admin/coupons/${couponId}/activity`, { method: 'PUT', body: JSON.stringify({ isActive: newActivityState }), headers: {'Content-Type': 'application/json'} });
-    // if (response.ok) { /* atualiza estado */ } else { /* trata erro */ }
-    console.log(`SIMULATING API CALL: PUT /api/admin/coupons/${couponId}/activity - Payload: { isActive: ${newActivityState} }`);
-
-    // Atualização otimista
-    setCoupons(prevCoupons =>
-      prevCoupons.map(coupon =>
-        coupon.id === couponId ? { ...coupon, isActive: newActivityState } : coupon
-      )
-    );
+  const toggleCouponActivity = (couponId: string) => {
+    setCoupons(prevCoupons => prevCoupons.map(coupon => coupon.id === couponId ? { ...coupon, isActive: !coupon.isActive } : coupon));
   };
+
+  const handleSaveChangesToServer = async (): Promise<{success: boolean, message: string}> => {
+    if (currentUser?.role !== 'admin') {
+      return { success: false, message: "Apenas administradores podem salvar."};
+    }
+    console.log("Saving all data to server via /api/admin/update-app-data");
+    try {
+      // O token ADMIN_API_SECRET deve ser uma variável de ambiente no frontend
+      // Mas idealmente, seria gerenciado de forma mais segura (ex: obtido após login real no backend)
+      // Para este exemplo, vamos assumir que está disponível como process.env.ADMIN_API_SECRET
+      // Se não estiver, a função de backend deve rejeitar.
+      const adminApiSecret = prompt("Digite a chave secreta de API para salvar (simulação):"); // Simulação
+      if (!adminApiSecret) return { success: false, message: "Chave de API não fornecida."};
+
+
+      const response = await fetch('/api/admin/update-app-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-API-Secret': adminApiSecret, // Chave secreta para "autenticação" simples
+        },
+        body: JSON.stringify({ menuItems, coupons }), // Envia o estado atual completo
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Falha ao salvar dados: ${response.statusText}`);
+      }
+      const result = await response.json();
+      console.log("Data saved successfully:", result);
+      // Opcional: Forçar recarregamento dos dados do servidor após salvar para garantir consistência,
+      // ou confiar que o estado local já está correto.
+      // await fetchAppData(); 
+      return { success: true, message: "Dados salvos no servidor com sucesso!" };
+    } catch (error) {
+      console.error("Error saving data to server:", error);
+      return { success: false, message: (error as Error).message || "Erro desconhecido ao salvar." };
+    }
+  };
+
 
   const currentNavCategoryObject = NAV_CATEGORIES.find(cat => cat.id === activeCategory);
   const availableBordasForModal = menuItems.filter(item => item.itemType === 'Borda' && item.isAvailable);
 
-  if (isDataLoading) {
+  if (isDataLoading && menuItems.length === 0 && coupons.length === 0) { // Only show full page loader on initial absolute load
     return (
       <div className="flex flex-col min-h-screen justify-center items-center bg-lightBg">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mb-4"></div>
@@ -341,6 +277,24 @@ const AppContent: React.FC = () => {
       </div>
     );
   }
+   if (dataError && menuItems.length === 0) {
+    return (
+      <div className="flex flex-col min-h-screen justify-center items-center bg-lightBg p-4 text-center">
+        <InfoIcon className="text-5xl text-red-500 mb-4" />
+        <h2 className="text-2xl text-brandText font-semibold mb-2">Oops! Algo deu errado.</h2>
+        <p className="text-itemDescriptionText mb-1">Não foi possível carregar os dados do cardápio do servidor.</p>
+        <p className="text-sm text-slate-500 mb-4">Detalhe do erro: {dataError}</p>
+        <p className="text-itemDescriptionText">Estamos mostrando uma versão offline com dados padrão.</p>
+        <button 
+          onClick={fetchAppData} 
+          className="mt-6 bg-primary hover:bg-primaryHover text-brandText font-semibold py-2 px-4 rounded-lg shadow-sm"
+        >
+          Tentar Novamente
+        </button>
+      </div>
+    );
+  }
+
 
   return (
     <div id="app-container" className="flex flex-col min-h-screen font-sans">
@@ -404,10 +358,7 @@ const AppContent: React.FC = () => {
       {currentPastelForBorda && (
         <SelectBordaModal
           isOpen={isBordaModalOpen}
-          onClose={() => {
-            setIsBordaModalOpen(false);
-            setCurrentPastelForBorda(undefined);
-          }}
+          onClose={() => { setIsBordaModalOpen(false); setCurrentPastelForBorda(undefined); }}
           pastel={currentPastelForBorda}
           bordas={availableBordasForModal}
           onConfirm={handleConfirmBordaSelection}
@@ -436,11 +387,10 @@ const AppContent: React.FC = () => {
           menuItems={menuItems}
           coupons={coupons}
           onToggleItemAvailability={toggleItemAvailability}
-          // Fix: Prop types for onAddCoupon and onUpdateCoupon now match the async functions being passed.
           onAddCoupon={addCoupon}
-          // Fix: Prop types for onAddCoupon and onUpdateCoupon now match the async functions being passed.
           onUpdateCoupon={updateCoupon}
           onToggleCouponActivity={toggleCouponActivity}
+          onSaveChangesToServer={handleSaveChangesToServer} // Passando a nova função
         />
       )}
 
@@ -459,12 +409,10 @@ const AppContent: React.FC = () => {
   );
 };
 
-const App = (): JSX.Element => {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
-};
+const App = (): JSX.Element => (
+  <AuthProvider>
+    <AppContent />
+  </AuthProvider>
+);
 
 export default App;

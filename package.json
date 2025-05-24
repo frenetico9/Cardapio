@@ -14,7 +14,9 @@
   "dependencies": {
     "@google/genai": "^0.14.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "@vercel/blob": "^0.23.4",
+    "buffer": "^6.0.3"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
