@@ -6,7 +6,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Mock user database (in a real app, this would be a backend)
 const mockAdminUser: User = {
   id: 'admin001',
-  email: 'admin@example.com',
+  email: 'isabelbrasil77@gmail.com',
   role: 'admin',
   isVerified: true,
 };
@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    if (email === mockAdminUser.email && password === 'admin123') {
+    if (email === mockAdminUser.email && password === 'maisuncao') {
       setCurrentUser(mockAdminUser);
       setIsLoading(false);
       return true;
