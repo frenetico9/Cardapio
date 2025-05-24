@@ -35,7 +35,7 @@ export const GiftIcon: React.FC<{ className?: string }> = ({ className }) => <i 
 // --- INFORMAÇÕES DO RESTAURANTE ---
 export const RESTAURANT_INFO: RestaurantInfo = {
   name: "BIG PASTEL",
-  logoUrl: "https://i.imgur.com/ELEXGD3.png", 
+  logoUrl: "https://i.imgur.com/U7Iwjof.gif", 
   tagline1: "DA BEL",
   tagline2: "26CM",
   operatingHours: "", 
