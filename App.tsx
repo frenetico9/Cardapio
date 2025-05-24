@@ -10,7 +10,8 @@ import CategoryNavigation from './components/CategoryNavigation';
 import InfoPanel from './components/InfoPanel';
 import SelectBordaModal from './components/SelectBordaModal';
 import AuthModal from './components/AuthModal';
-import AdminPanelModal from './components/AdminPanelModal';
+// Corrected import path for AdminPanelModal
+import AdminPanelModal from './api/admin/AdminPanelModal';
 import CouponHighlightPopup from './components/CouponHighlightPopup';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RESTAURANT_INFO, NAV_CATEGORIES, AVAILABLE_PAYMENT_METHODS, InfoIcon, CONST_INITIAL_MENU_ITEMS, CONST_AVAILABLE_COUPONS, CONST_AVAILABLE_BORDAS } from './constants';
