@@ -1,3 +1,4 @@
+
 <script type="importmap">
 {
   "imports": {
@@ -30,29 +31,28 @@
       theme: {
         extend: {
           colors: {
-            primary: '#FDBE2C', // Main yellow - good for fixed header
+            primary: '#FDBE2C', 
             primaryHover: '#E6A900', 
-            brandText: '#4A2C2A', // Deep brown for text on yellow
-            itemDescriptionText: '#71717a', // zinc-500 (was #52525b / zinc-600) - for softer description text
-            categoryBg: '#8D4B3F', // Muted red/brown - might be used less for general UI, more for specific highlights if needed
+            brandText: '#4A2C2A', 
+            itemDescriptionText: '#71717a', 
+            categoryBg: '#8D4B3F', 
             categoryText: '#FFFFFF',
             priceTextOnCategory: '#FFFFFF',
-            lightBg: '#f8fafc', // Tailwind's slate-50 (was #FFFBF2) - very light gray for page background
-            lightText: '#1e293b', // Tailwind's slate-800 (was #333333) - general dark text
-            vibrantOrange: '#F97316', // orange-500
-            vibrantOrangeHover: '#EA580C', // orange-600
-            cardBg: '#FFFFFF', // White for cards
+            lightBg: '#f8fafc', 
+            lightText: '#1e293b', 
+            vibrantOrange: '#F97316', 
+            vibrantOrangeHover: '#EA580C', 
+            cardBg: '#FFFFFF', 
           },
           fontFamily: {
             sans: ['"Inter"', '"Nunito Sans"', 'sans-serif'],
-            // serif: ['"Playfair Display"', 'serif'], // Removed as per new style direction
           },
           height: {
             '22': '5.5rem', 
-            '28': '7rem', // Added for responsive header
+            '28': '7rem', 
             '40': '10rem', 
             '48': '12rem', 
-            '52': '13rem', // Added for responsive menu item card image
+            '52': '13rem', 
             '60': '15rem', 
             '64': '16rem', 
             '72': '18rem', 
@@ -66,11 +66,16 @@
           },
           animation: {
             'pulse-grow-shrink': 'pulse-grow-shrink 2.5s infinite ease-in-out',
+            'scroll-left': 'scrollLeft 25s linear infinite', // Adicionada a animação do marquee
           },
           keyframes: {
             'pulse-grow-shrink': {
               '0%, 100%': { transform: 'scale(1)' },
               '50%': { transform: 'scale(1.05)' },
+            },
+            'scrollLeft': { // Adicionada a definição do keyframe
+              '0%': { transform: 'translateX(100%)' },
+              '100%': { transform: 'translateX(-100%)' },
             }
           }
         }
@@ -82,10 +87,10 @@
       font-family: 'Inter', 'Nunito Sans', sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      background-color: #f8fafc; /* lightBg - Tailwind slate-50 */
-      color: #1e293b; /* lightText - Tailwind slate-800 */
-      font-size: 1.05rem; /* Slightly increased base font size */
-      line-height: 1.6; /* Improved line height for readability */
+      background-color: #f8fafc; 
+      color: #1e293b; 
+      font-size: 1.05rem; 
+      line-height: 1.6; 
     }
     /* Scrollbar styles */
     ::-webkit-scrollbar {
@@ -93,14 +98,14 @@
       height: 8px;
     }
     ::-webkit-scrollbar-track {
-      background: #e2e8f0; /* slate-200 */
+      background: #e2e8f0; 
     }
     ::-webkit-scrollbar-thumb {
-      background: #FDBE2C; /* primary */
+      background: #FDBE2C; 
       border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #E6A900; /* primaryHover */
+      background: #E6A900; 
     }
     html {
       scrollbar-width: thin;
@@ -108,12 +113,16 @@
     }
     /* Accessibility focus style */
     *:focus-visible {
-        outline: 3px solid #EA580C; /* vibrantOrangeHover */
+        outline: 3px solid #EA580C; 
         outline-offset: 2px;
     }
     button:focus-visible, a:focus-visible {
-        outline: 3px solid #EA580C !important; /* vibrantOrangeHover */
+        outline: 3px solid #EA580C !important; 
         outline-offset: 2px !important;
+    }
+    /* Adicionada classe para animação do marquee */
+    .animate-scroll-left {
+        animation: scrollLeft 25s linear infinite;
     }
   </style>
 </head>
@@ -121,5 +130,6 @@
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
 </body>
-</html><link rel="stylesheet" href="index.css">
+</html>
+<link rel="stylesheet" href="index.css">
 <script src="index.tsx" type="module"></script>

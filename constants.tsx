@@ -179,40 +179,13 @@ export const AVAILABLE_PAYMENT_METHODS: PaymentMethod[] = [
 // --- CUPONS DISPONÍVEIS (MOCK) ---
 export const CONST_AVAILABLE_COUPONS: Coupon[] = [
   { 
-    id: 'cupom1', 
-    code: 'BEMVINDO10', 
-    description: '10% de desconto na primeira compra.',
+    id: 'cupom_big10', 
+    code: 'BIG10', 
+    description: '10% de desconto em pedidos acima de R$50.', // Updated description
     discountType: 'percentage', 
-    value: 10, 
+    value: 10, // Updated value
     isActive: true, 
-    minOrderValue: 30 
-  },
-  { 
-    id: 'cupom2', 
-    code: 'PASTEL5OFF', 
-    description: 'R$ 5,00 de desconto em pedidos acima de R$50.',
-    discountType: 'fixed', 
-    value: 5, 
-    isActive: true, 
-    expiryDate: '2024-12-31',
-    minOrderValue: 50
-  },
-  { 
-    id: 'cupom3', 
-    code: 'INATIVO20', 
-    description: 'Cupom de teste inativo.',
-    discountType: 'percentage', 
-    value: 20, 
-    isActive: false 
-  },
-   { 
-    id: 'cupom4', 
-    code: 'VERAOCOOL', 
-    description: '15% OFF para curtir o verão!',
-    discountType: 'percentage', 
-    value: 15, 
-    isActive: true, 
-    expiryDate: '2025-03-31', // Exemplo de data futura
-    minOrderValue: 25
+    minOrderValue: 50,
+    expiryDate: '2025-08-01' // YYYY-MM-DD format
   },
 ];

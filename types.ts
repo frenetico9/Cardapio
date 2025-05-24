@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export type ItemType = 'Tradicional' | 'Especial' | 'Doce' | 'Borda' | 'Bebida';
@@ -5,9 +6,9 @@ export type ItemType = 'Tradicional' | 'Especial' | 'Doce' | 'Borda' | 'Bebida';
 export interface RestaurantInfo {
   name: string;
   logoUrl: string;
-  tagline1?: string; // For "DA BEL"
-  tagline2?: string; // For "26CM"
-  operatingHours: string; // Can be used for other info if needed
+  tagline1?: string; 
+  tagline2?: string; 
+  operatingHours: string; 
   contact: {
     phone: string;
     whatsapp: string;
@@ -23,25 +24,23 @@ export interface RestaurantInfo {
 }
 
 export interface MenuItem {
-  id: string; // Unique ID for the base item (pastel, bebida, borda definition)
+  id: string; 
   name:string; 
   description: string; 
   price: number; 
-  imageUrl?: string; // Optional, as bordas won't have images
-  category: string; // Matches Category id (for pastéis and bebidas)
+  imageUrl?: string; 
+  category: string; 
   itemType?: ItemType; 
   tags?: string[]; 
   options?: string[];
-  isAvailable: boolean; // Novo campo para disponibilidade
+  isAvailable: boolean; 
 }
 
-export interface CartItem extends MenuItem { // MenuItem properties here are the base pastel/bebida
-  cartItemId: string; // Unique ID for this specific cart entry, e.g., "pastel_carne_borda_cheddar"
-  baseItemName: string; // Original name of the pastel or bebida
+export interface CartItem extends MenuItem { 
+  cartItemId: string; 
+  baseItemName: string; 
   quantity: number;
-  selectedBorda?: MenuItem; // The selected borda item, if applicable
-  // The 'name' property in CartItem will be composite (e.g., "Pastel de Carne (Borda: Cheddar)")
-  // The 'price' property in CartItem will be pastel.price + (selectedBorda?.price || 0)
+  selectedBorda?: MenuItem; 
 }
 
 export interface Category {
@@ -79,19 +78,36 @@ export interface PaymentMethod {
   description?: string; 
 }
 
-// Authentication Types
-export type UserRole = 'customer' | 'admin';
+// Coupon Type
+export interface Coupon {
+  id: string;
+  code: string; 
+  description?: string; 
+  discountType: 'percentage' | 'fixed'; 
+  value: number; 
+  isActive: boolean; 
+  expiryDate?: string; 
+  minOrderValue?: number; 
+  uses?: number; 
+  maxUses?: number; 
+}
 
+// FIX: Define AuthView type
+export type AuthView = 'login' | 'register' | 'verifyEmail';
+
+// FIX: Define UserRole type
+export type UserRole = 'admin' | 'customer';
+
+// FIX: Define User interface
 export interface User {
   id: string;
   email: string;
   role: UserRole;
-  isVerified: boolean; // For customer email verification
-  // password will not be stored here directly in a real app
+  isVerified: boolean;
+  name?: string; // Optional name field
 }
 
-export type AuthView = 'login' | 'register' | 'verifyEmail';
-
+// FIX: Define AuthContextType
 export interface AuthContextType {
   currentUser: User | null;
   isLoading: boolean;
@@ -99,21 +115,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, password: string) => Promise<boolean>; // Returns true if verification email "sent"
   logout: () => void;
-  sendVerificationEmail: (email: string) => Promise<string | null>; // Returns mock code or null on error
-  verifyEmailCode: (email: string, code: string) => Promise<boolean>; // Returns true if code is correct
+  sendVerificationEmail: (email: string) => Promise<string | null>; // Returns code for mock, null on failure
+  verifyEmailCode: (email: string, code: string) => Promise<boolean>;
   clearAuthError: () => void;
-}
-
-// Coupon Type
-export interface Coupon {
-  id: string;
-  code: string; // Unique code for the coupon
-  description?: string; // Brief description
-  discountType: 'percentage' | 'fixed'; // Type of discount
-  value: number; // Discount value (percentage or fixed amount)
-  isActive: boolean; // If the coupon is currently active
-  expiryDate?: string; // Optional expiry date (e.g., "YYYY-MM-DD")
-  minOrderValue?: number; // Optional minimum order value to apply coupon
-  uses?: number; // Optional: how many times it has been used
-  maxUses?: number; // Optional: max number of uses
 }
