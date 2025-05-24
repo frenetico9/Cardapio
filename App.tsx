@@ -232,33 +232,51 @@ const AppContent: React.FC = () => {
     }
     console.log("Saving all data to server via /api/admin/update-app-data");
     try {
-      // O token ADMIN_API_SECRET deve ser uma variável de ambiente no frontend
-      // Mas idealmente, seria gerenciado de forma mais segura (ex: obtido após login real no backend)
-      // Para este exemplo, vamos assumir que está disponível como process.env.ADMIN_API_SECRET
-      // Se não estiver, a função de backend deve rejeitar.
-      const adminApiSecret = prompt("Digite a chave secreta de API para salvar (simulação):"); // Simulação
+      const adminApiSecret = prompt("Digite a chave secreta de API para salvar (simulação):");
       if (!adminApiSecret) return { success: false, message: "Chave de API não fornecida."};
-
 
       const response = await fetch('/api/admin/update-app-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Admin-API-Secret': adminApiSecret, // Chave secreta para "autenticação" simples
+          'X-Admin-API-Secret': adminApiSecret,
         },
-        body: JSON.stringify({ menuItems, coupons }), // Envia o estado atual completo
+        body: JSON.stringify({ menuItems, coupons }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Falha ao salvar dados: ${response.statusText}`);
+        let errorText = `Erro do servidor: ${response.status} ${response.statusText}`;
+        try {
+          // Tenta ler o corpo da resposta como texto, pois pode não ser JSON
+          const responseBody = await response.text();
+          if (responseBody) {
+             // Tenta analisar como JSON se o tipo de conteúdo sugerir
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                try {
+                    const errorData = JSON.parse(responseBody);
+                    errorText = errorData.message || responseBody;
+                } catch (jsonError) {
+                    // Falhou ao analisar JSON, usa o corpo do texto bruto
+                    errorText = responseBody; 
+                }
+            } else {
+                 errorText = responseBody; // Não é JSON, usa o corpo do texto bruto
+            }
+          }
+        } catch (e) {
+          // Falha ao ler o corpo do texto, mantenha o erro de status
+          console.error("Falha ao ler o corpo da resposta de erro:", e);
+        }
+        console.error("Server error details:", errorText);
+        throw new Error(errorText);
       }
+
+      // Se response.ok for true, espera-se JSON
       const result = await response.json();
       console.log("Data saved successfully:", result);
-      // Opcional: Forçar recarregamento dos dados do servidor após salvar para garantir consistência,
-      // ou confiar que o estado local já está correto.
-      // await fetchAppData(); 
-      return { success: true, message: "Dados salvos no servidor com sucesso!" };
+      return { success: true, message: result.message || "Dados salvos no servidor com sucesso!" };
+
     } catch (error) {
       console.error("Error saving data to server:", error);
       return { success: false, message: (error as Error).message || "Erro desconhecido ao salvar." };
