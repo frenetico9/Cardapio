@@ -1,4 +1,3 @@
-
 // api/admin/update-app-data.ts
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { put } from '@vercel/blob';
@@ -12,8 +11,16 @@ interface AppDataPayload {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Handle OPTIONS preflight request for CORS
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Or your specific frontend origin
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-API-Secret');
+    res.status(204).end(); // 204 No Content
+    return;
+  }
+
   // 1. Autenticação (Simples - Chave Secreta)
-  // Em um app real, use um método mais robusto (ex: JWT, OAuth)
   const clientSecret = req.headers['x-admin-api-secret'];
   const serverSecret = process.env.ADMIN_API_SECRET;
 
@@ -27,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // 2. Validação do Método e Corpo da Requisição
   if (req.method !== 'POST') {
-    res.setHeader('Allow', ['POST']);
+    res.setHeader('Allow', ['POST', 'OPTIONS']); // Include OPTIONS in Allow header
     return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   }
 
@@ -45,13 +52,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
     const jsonDataString = JSON.stringify(dataToStore, null, 2); // Pretty print JSON
 
-    // O Vercel Blob `put` irá sobrescrever o arquivo se ele já existir com o mesmo pathname.
-    // `addRandomSuffix: false` é importante aqui para garantir que o nome do arquivo seja sempre o mesmo.
-    // `access: 'public'` para que a função `/api/app-data` (e qualquer cliente direto, se desejado) possa ler.
     const blob = await put(APP_DATA_BLOB_FILENAME, jsonDataString, {
       access: 'public',
       contentType: 'application/json',
-      addRandomSuffix: false, // Garante que o nome do arquivo seja previsível
+      addRandomSuffix: false, 
     });
 
     console.log(`App data successfully saved to Blob: ${blob.url}`);

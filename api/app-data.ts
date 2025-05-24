@@ -1,13 +1,14 @@
-
 // api/app-data.ts
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { head, list, download } from '@vercel/blob';
+// Original line: import { head, list, download } from '@vercel/blob';
+// FIX: Removed 'download' as it's not an exported member. Content will be fetched via the blob's URL.
+import { head, list } from '@vercel/blob';
 import { CONST_INITIAL_MENU_ITEMS, CONST_AVAILABLE_BORDAS, CONST_AVAILABLE_COUPONS } from '../constants'; // Ajuste o caminho se necessário
 import type { MenuItem, Coupon } from '../types';
 
 const APP_DATA_BLOB_FILENAME = 'app_data.json';
 // A URL completa para o blob seria `https://<seu-blob-store-id>.public.blob.vercel-storage.com/${APP_DATA_BLOB_FILENAME}`
-// Mas para `download` e `head`, apenas o pathname é necessário.
+// Mas para `list` e `head`, apenas o pathname é necessário.
 
 interface AppData {
   menuItems: MenuItem[];
@@ -30,8 +31,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (blobUrl) {
         console.log(`Found ${APP_DATA_BLOB_FILENAME} at ${blobUrl}, attempting to download.`);
         // Se encontrou, faz o download do conteúdo
-        const blobData = await download(blobUrl);
-        const appData: AppData = JSON.parse(await blobData.text());
+        // FIX: Replace 'download(blobUrl)' with 'fetch(blobUrl)'
+        const response = await fetch(blobUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to download blob from ${blobUrl}: ${response.status} ${response.statusText}`);
+        }
+        const blobText = await response.text();
+        const appData: AppData = JSON.parse(blobText);
         
         // Validação básica para garantir que os arrays existem
         if (!Array.isArray(appData.menuItems)) appData.menuItems = [];
