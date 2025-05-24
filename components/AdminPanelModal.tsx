@@ -8,8 +8,10 @@ interface AdminPanelModalProps {
   menuItems: MenuItem[];
   coupons: Coupon[];
   onToggleItemAvailability: (itemId: string) => void;
-  onAddCoupon: (coupon: Coupon) => boolean; // Returns true on success, false on failure (e.g. duplicate code)
-  onUpdateCoupon: (coupon: Coupon) => boolean;
+  // Fix: Changed return type to Promise<boolean> to align with async function in App.tsx
+  onAddCoupon: (coupon: Omit<Coupon, 'id'>) => Promise<boolean>; 
+  // Fix: Changed return type to Promise<boolean> to align with async function in App.tsx
+  onUpdateCoupon: (coupon: Coupon) => Promise<boolean>;
   onToggleCouponActivity: (couponId: string) => void;
 }
 
@@ -72,7 +74,8 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setCouponFormError(null);
   };
 
-  const handleCouponFormSubmit = (e: React.FormEvent) => {
+  // Fix: Made function async to await promises from onAddCoupon/onUpdateCoupon
+  const handleCouponFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCouponFormError(null);
 
@@ -97,18 +100,21 @@ const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
     let success = false;
     if (editingCoupon) {
-        success = onUpdateCoupon({ ...editingCoupon, ...newCouponData });
+        // Fix: Awaited the result of onUpdateCoupon
+        success = await onUpdateCoupon({ ...editingCoupon, ...newCouponData });
     } else {
-        success = onAddCoupon(newCouponData as Coupon); // ID will be added by parent
+        // Fix: Awaited the result of onAddCoupon
+        success = await onAddCoupon(newCouponData as Omit<Coupon, 'id'>); // ID will be added by parent
     }
     
     if (success) {
       resetCouponForm();
     } else {
-      if (!editingCoupon) { // Only show duplicate error for new coupons
+      // Error messages are more specific now based on whether it's an add or update operation.
+      if (editingCoupon) {
+        setCouponFormError('Falha ao atualizar o cupom. Outro cupom pode já utilizar este código.');
+      } else { 
         setCouponFormError('Falha ao adicionar o cupom. Verifique se o código já existe.');
-      } else {
-        setCouponFormError('Falha ao atualizar o cupom.');
       }
     }
   };
