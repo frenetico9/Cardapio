@@ -1,7 +1,6 @@
-
-import React, { useState } from 'react';
-import { CartItem, PaymentMethod } from '../types';
-import { CloseIcon, TrashIcon, UserIcon, AddressIcon, WhatsAppIcon } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { CartItem, PaymentMethod, Coupon } from '../types';
+import { CloseIcon, TrashIcon, UserIcon, AddressIcon, WhatsAppIcon, TagIcon } from '../constants';
 
 interface OrderViaWhatsAppModalProps {
   isOpen: boolean;
@@ -9,10 +8,11 @@ interface OrderViaWhatsAppModalProps {
   selectedItems: CartItem[];
   onRemoveItem: (cartItemId: string) => void;
   onUpdateQuantity: (cartItemId: string, newQuantity: number) => void;
-  totalAmount: number;
+  subtotalAmount: number; // Renamed from totalAmount
   paymentMethods: PaymentMethod[];
   restaurantWhatsAppNumber: string;
   onOrderSent: () => void;
+  availableCoupons: Coupon[];
 }
 
 const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
@@ -21,17 +21,96 @@ const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
   selectedItems,
   onRemoveItem,
   onUpdateQuantity,
-  totalAmount,
+  subtotalAmount,
   paymentMethods,
   restaurantWhatsAppNumber,
   onOrderSent,
+  availableCoupons,
 }) => {
   const [customerName, setCustomerName] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  // Coupon State
+  const [couponCodeInput, setCouponCodeInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+
+  const finalTotalAmount = subtotalAmount - discountAmount;
+
+  // Reset coupon state when modal opens or subtotal changes (e.g. items removed)
+  useEffect(() => {
+    if (isOpen) {
+      setCouponCodeInput('');
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+      setCouponMessage(null);
+    }
+  }, [isOpen, subtotalAmount]);
+
+
+  const handleApplyCoupon = () => {
+    setCouponMessage(null);
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+
+    if (!couponCodeInput.trim()) {
+      setCouponMessage("Por favor, insira um código de cupom.");
+      return;
+    }
+
+    const couponToApply = availableCoupons.find(
+      c => c.code.toUpperCase() === couponCodeInput.trim().toUpperCase()
+    );
+
+    if (!couponToApply) {
+      setCouponMessage("Cupom inválido ou não encontrado.");
+      return;
+    }
+
+    if (!couponToApply.isActive) {
+      setCouponMessage("Este cupom não está ativo no momento.");
+      return;
+    }
+
+    if (couponToApply.expiryDate) {
+      const today = new Date().toISOString().split('T')[0];
+      if (couponToApply.expiryDate < today) {
+        setCouponMessage("Este cupom expirou.");
+        return;
+      }
+    }
+
+    if (couponToApply.minOrderValue && subtotalAmount < couponToApply.minOrderValue) {
+      setCouponMessage(`Este cupom requer um pedido mínimo de R$ ${couponToApply.minOrderValue.toFixed(2).replace('.', ',')}.`);
+      return;
+    }
+
+    let calculatedDiscount = 0;
+    if (couponToApply.discountType === 'percentage') {
+      calculatedDiscount = (subtotalAmount * couponToApply.value) / 100;
+    } else { // fixed
+      calculatedDiscount = couponToApply.value;
+    }
+    
+    // Ensure discount does not exceed subtotal
+    calculatedDiscount = Math.min(calculatedDiscount, subtotalAmount);
+
+
+    setAppliedCoupon(couponToApply);
+    setDiscountAmount(calculatedDiscount);
+    setCouponMessage(`Cupom "${couponToApply.code}" aplicado com sucesso!`);
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCodeInput('');
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setCouponMessage("Cupom removido.");
+  };
+
 
   const handleSendOrder = () => {
     setFormError(null);
@@ -61,7 +140,14 @@ const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
     selectedItems.forEach(item => {
       message += `- ${item.quantity}x ${item.name} (R$ ${item.price.toFixed(2).replace('.', ',')} cada)\n`;
     });
-    message += `\n*Total do Pedido:* R$ ${totalAmount.toFixed(2).replace('.', ',')}\n`;
+    
+    message += `\n*Subtotal:* R$ ${subtotalAmount.toFixed(2).replace('.', ',')}\n`;
+    
+    if (appliedCoupon && discountAmount > 0) {
+      message += `*Cupom Aplicado:* ${appliedCoupon.code} (-R$ ${discountAmount.toFixed(2).replace('.', ',')})\n`;
+    }
+
+    message += `*Total do Pedido:* R$ ${finalTotalAmount.toFixed(2).replace('.', ',')}\n`;
     message += `*Forma de Pagamento:* ${selectedPaymentMethod?.name || 'Não informada'}\n\n`;
     message += `Aguardo a confirmação e o tempo estimado para entrega. Obrigado!`;
 
@@ -72,7 +158,10 @@ const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
     setCustomerName('');
     setDeliveryAddress('');
     setSelectedPaymentMethodId(null);
+    // Coupon state is reset by useEffect when modal re-opens
   };
+
+  if (!isOpen) return null;
 
   return (
     <div 
@@ -103,7 +192,7 @@ const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
             {selectedItems.length === 0 ? (
               <p className="text-itemDescriptionText italic">Nenhum item selecionado. Volte ao cardápio!</p>
             ) : (
-              <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+              <div className="space-y-3 max-h-40 sm:max-h-48 overflow-y-auto pr-2"> {/* Adjusted max-h */}
                 {selectedItems.map(item => (
                   <div key={item.cartItemId} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-b-0 text-sm">
                     <div>
@@ -123,12 +212,68 @@ const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
               </div>
             )}
             {selectedItems.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between items-center">
-                    <p className="text-md font-semibold text-slate-700">Total do Pedido:</p>
-                    <p className="text-lg font-bold text-vibrantOrange">R$ {totalAmount.toFixed(2).replace('.', ',')}</p>
+                <div className="mt-3 pt-3 border-t border-slate-200">
+                    <div className="flex justify-between items-center mb-1">
+                        <p className="text-sm text-slate-600">Subtotal:</p>
+                        <p className="text-sm text-slate-600">R$ {subtotalAmount.toFixed(2).replace('.', ',')}</p>
+                    </div>
+                    {appliedCoupon && discountAmount > 0 && (
+                         <div className="flex justify-between items-center text-green-600 mb-1">
+                            <p className="text-sm">Desconto ({appliedCoupon.code}):</p>
+                            <p className="text-sm">- R$ {discountAmount.toFixed(2).replace('.', ',')}</p>
+                        </div>
+                    )}
+                    <div className="flex justify-between items-center mt-1">
+                        <p className="text-md font-semibold text-slate-700">Total do Pedido:</p>
+                        <p className="text-lg font-bold text-vibrantOrange">R$ {finalTotalAmount.toFixed(2).replace('.', ',')}</p>
+                    </div>
                 </div>
             )}
           </div>
+          
+          {/* Coupon Section */}
+          {selectedItems.length > 0 && (
+            <div>
+                <h3 className="text-lg font-semibold text-slate-700 mb-2">Cupom de Desconto</h3>
+                <div className="flex items-stretch space-x-2">
+                    <div className="relative flex-grow">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <TagIcon className="text-slate-400" />
+                        </div>
+                        <input 
+                            type="text"
+                            value={couponCodeInput}
+                            onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                            placeholder="CÓDIGO DO CUPOM"
+                            className="w-full p-2.5 pl-10 border border-slate-300 rounded-lg focus:ring-vibrantOrange focus:border-vibrantOrange text-sm text-slate-700 uppercase"
+                            aria-label="Código do Cupom"
+                            disabled={!!appliedCoupon}
+                        />
+                    </div>
+                    {!appliedCoupon ? (
+                        <button 
+                            onClick={handleApplyCoupon}
+                            className="bg-primary hover:bg-primaryHover text-brandText font-semibold py-2 px-4 rounded-lg shadow-sm text-sm whitespace-nowrap"
+                        >
+                            Aplicar
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={handleRemoveCoupon}
+                            className="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm text-sm whitespace-nowrap"
+                        >
+                            Remover
+                        </button>
+                    )}
+                </div>
+                {couponMessage && (
+                    <p className={`text-xs mt-2 ${appliedCoupon && discountAmount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {couponMessage}
+                    </p>
+                )}
+            </div>
+          )}
+
 
           <div>
             <h3 className="text-lg font-semibold text-slate-700 mb-3">Seus Dados:</h3>

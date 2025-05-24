@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MenuItem } from '../types';
 import { CloseIcon } from '../constants';
@@ -7,7 +6,7 @@ interface SelectBordaModalProps {
   isOpen: boolean;
   onClose: () => void;
   pastel: MenuItem;
-  bordas: MenuItem[];
+  bordas: MenuItem[]; // Should be pre-filtered for availability by App.tsx
   onConfirm: (pastel: MenuItem, selectedBorda?: MenuItem) => void;
 }
 
@@ -15,7 +14,7 @@ const SelectBordaModal: React.FC<SelectBordaModalProps> = ({
   isOpen,
   onClose,
   pastel,
-  bordas,
+  bordas, // These are already filtered for isAvailable: true
   onConfirm,
 }) => {
   const [selectedBordaId, setSelectedBordaId] = useState<string | undefined>(undefined);
@@ -23,6 +22,7 @@ const SelectBordaModal: React.FC<SelectBordaModalProps> = ({
   if (!isOpen) return null;
 
   const handleConfirmSelection = () => {
+    // Bordas prop already contains only available bordas
     const chosenBorda = bordas.find(b => b.id === selectedBordaId);
     onConfirm(pastel, chosenBorda);
   };
@@ -52,7 +52,7 @@ const SelectBordaModal: React.FC<SelectBordaModalProps> = ({
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
           <p className="text-sm text-itemDescriptionText">
             Selecione uma opção de borda recheada ou prossiga sem borda. Todas as bordas são sem custo adicional.
           </p>
@@ -74,7 +74,11 @@ const SelectBordaModal: React.FC<SelectBordaModalProps> = ({
             )}
           </button>
 
-          {bordas.map(borda => (
+          {bordas.length === 0 && selectedBordaId !== undefined && (
+            <p className="text-sm text-center text-itemDescriptionText italic">Nenhuma borda recheada disponível no momento.</p>
+          )}
+
+          {bordas.map(borda => ( // bordas here are already filtered for isAvailable
             <button
               key={borda.id}
               onClick={() => setSelectedBordaId(borda.id)}

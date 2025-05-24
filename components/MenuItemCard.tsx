@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { MenuItem, ItemType } from '../types';
-import { IMGUR_PLACEHOLDER } from '../constants';
+import { IMGUR_PLACEHOLDER, BanIcon } from '../constants';
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -22,24 +21,38 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onSelectPastel, categ
   const isPastel = item.itemType === 'Tradicional' || item.itemType === 'Especial' || item.itemType === 'Doce';
 
   const handleButtonClick = () => {
-    onSelectPastel(item);
+    if (item.isAvailable) {
+      onSelectPastel(item);
+    }
   };
 
+  const cardClasses = `bg-cardBg rounded-xl shadow-subtle flex flex-col transition-all duration-300 overflow-hidden group border border-slate-200 ${
+    item.isAvailable ? 'hover:shadow-lifted' : 'opacity-60 cursor-not-allowed'
+  }`;
+
   return (
-    <div className="bg-cardBg rounded-xl shadow-subtle hover:shadow-lifted flex flex-col transition-all duration-300 overflow-hidden group border border-slate-200">
-      {item.imageUrl && item.imageUrl !== IMGUR_PLACEHOLDER ? (
-        <img 
-          src={item.imageUrl} 
-          alt={item.name} 
-          className="w-full h-52 sm:h-60 md:h-64 object-cover transition-transform duration-300 group-hover:scale-105" // Responsive image height
-        />
-      ) : (
-        <div className="w-full h-52 sm:h-60 md:h-64 bg-slate-200 flex items-center justify-center"> {/* Responsive placeholder height */}
-          <span className="text-slate-500 text-sm italic">
-            {item.itemType === 'Bebida' ? 'Bebida' : 'Imagem Indisponível'}
-          </span>
-        </div>
-      )}
+    <div className={cardClasses} aria-disabled={!item.isAvailable}>
+      <div className="relative">
+        {item.imageUrl && item.imageUrl !== IMGUR_PLACEHOLDER ? (
+          <img 
+            src={item.imageUrl} 
+            alt={item.name} 
+            className={`w-full h-52 sm:h-60 md:h-64 object-cover transition-transform duration-300 ${item.isAvailable ? 'group-hover:scale-105' : ''}`}
+          />
+        ) : (
+          <div className="w-full h-52 sm:h-60 md:h-64 bg-slate-200 flex items-center justify-center">
+            <span className="text-slate-500 text-sm italic">
+              {item.itemType === 'Bebida' ? 'Bebida' : 'Imagem Indisponível'}
+            </span>
+          </div>
+        )}
+        {!item.isAvailable && (
+          <div className="absolute inset-0 bg-slate-700 bg-opacity-50 flex flex-col items-center justify-center text-center p-4">
+            <BanIcon className="text-white text-4xl mb-2" />
+            <span className="text-white font-semibold text-lg">Indisponível</span>
+          </div>
+        )}
+      </div>
 
       <div className="p-4 sm:p-5 flex flex-col flex-grow">
         {item.itemType && tagStyles[item.itemType] && (
@@ -65,10 +78,14 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onSelectPastel, categ
 
         <button
           onClick={handleButtonClick}
-          className="w-full bg-vibrantOrange hover:bg-vibrantOrangeHover text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-vibrantOrange focus:ring-opacity-50 transform hover:-translate-y-0.5"
-          aria-label={`${isPastel ? 'Escolher Opções' : 'Adicionar'} ${item.name}`}
+          disabled={!item.isAvailable}
+          className={`w-full font-semibold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50
+            ${item.isAvailable 
+              ? 'bg-vibrantOrange hover:bg-vibrantOrangeHover text-white hover:shadow-lg focus:ring-vibrantOrange transform hover:-translate-y-0.5' 
+              : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}
+          aria-label={`${item.isAvailable ? (isPastel ? 'Escolher Opções' : 'Adicionar') : 'Item indisponível:'} ${item.name}`}
         >
-          {isPastel ? 'Escolher Opções' : 'Adicionar'}
+          {item.isAvailable ? (isPastel ? 'Escolher Opções' : 'Adicionar') : 'Indisponível'}
         </button>
       </div>
     </div>

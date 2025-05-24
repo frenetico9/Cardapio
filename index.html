@@ -58,6 +58,15 @@
             'subtle': '0 4px 12px rgba(0,0,0,0.05)',
             'lifted': '0 10px 20px rgba(0,0,0,0.07), 0 6px 6px rgba(0,0,0,0.05)',
             'header': '0 2px 4px rgba(0,0,0,0.1)',
+          },
+          animation: {
+            'pulse-grow-shrink': 'pulse-grow-shrink 2.5s infinite ease-in-out',
+          },
+          keyframes: {
+            'pulse-grow-shrink': {
+              '0%, 100%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(1.05)' },
+            }
           }
         }
       }

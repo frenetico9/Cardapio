@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export type ItemType = 'Tradicional' | 'Especial' | 'Doce' | 'Borda' | 'Bebida';
@@ -33,6 +32,7 @@ export interface MenuItem {
   itemType?: ItemType; 
   tags?: string[]; 
   options?: string[];
+  isAvailable: boolean; // Novo campo para disponibilidade
 }
 
 export interface CartItem extends MenuItem { // MenuItem properties here are the base pastel/bebida
@@ -77,4 +77,43 @@ export interface PaymentMethod {
   name: string;
   icon?: React.ReactNode; 
   description?: string; 
+}
+
+// Authentication Types
+export type UserRole = 'customer' | 'admin';
+
+export interface User {
+  id: string;
+  email: string;
+  role: UserRole;
+  isVerified: boolean; // For customer email verification
+  // password will not be stored here directly in a real app
+}
+
+export type AuthView = 'login' | 'register' | 'verifyEmail';
+
+export interface AuthContextType {
+  currentUser: User | null;
+  isLoading: boolean;
+  authError: string | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string) => Promise<boolean>; // Returns true if verification email "sent"
+  logout: () => void;
+  sendVerificationEmail: (email: string) => Promise<string | null>; // Returns mock code or null on error
+  verifyEmailCode: (email: string, code: string) => Promise<boolean>; // Returns true if code is correct
+  clearAuthError: () => void;
+}
+
+// Coupon Type
+export interface Coupon {
+  id: string;
+  code: string; // Unique code for the coupon
+  description?: string; // Brief description
+  discountType: 'percentage' | 'fixed'; // Type of discount
+  value: number; // Discount value (percentage or fixed amount)
+  isActive: boolean; // If the coupon is currently active
+  expiryDate?: string; // Optional expiry date (e.g., "YYYY-MM-DD")
+  minOrderValue?: number; // Optional minimum order value to apply coupon
+  uses?: number; // Optional: how many times it has been used
+  maxUses?: number; // Optional: max number of uses
 }
