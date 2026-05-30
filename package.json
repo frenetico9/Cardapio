@@ -1,8 +1,10 @@
-
 {
   "name": "cardapio-digital-react",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "esbuild index.tsx --bundle --outfile=build/static/js/bundle.js --jsx=automatic --servedir=. --serve-fallback=index.html --port=3000 --loader:.png=dataurl --loader:.svg=dataurl --define:process.env.NODE_ENV='\"development\"'",
     "build": "npm run build:clean && npm run build:esbuild && npm run build:html",
