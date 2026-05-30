@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Los Pollos Hermanos - Cardápio Digital</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FBBF24',
+            primaryHover: '#F59E0B',
+            brandText: '#4A0E0E',
+            itemDescriptionText: '#6B7280',
+            categoryBg: '#7F1D1D',
+            categoryText: '#FEF3C7',
+            priceTextOnCategory: '#FEF3C7',
+            lightBg: '#FFF7ED',
+            lightText: '#431407',
+            vibrantOrange: '#B91C1C',
+            vibrantOrangeHover: '#991B1B',
+            cardBg: '#FFFFFF',
+          },
+          fontFamily: {
+            sans: ['"Inter"', '"Nunito Sans"', 'sans-serif'],
+          },
+          height: {
+            '22': '5.5rem',
+            '28': '7rem',
+            '40': '10rem',
+            '48': '12rem',
+            '52': '13rem',
+            '60': '15rem',
+            '64': '16rem',
+            '72': '18rem',
+            '80': '20rem',
+            '96': '24rem',
+          },
+          boxShadow: {
+            subtle: '0 4px 12px rgba(0,0,0,0.06)',
+            lifted: '0 12px 24px rgba(127,29,29,0.15), 0 6px 10px rgba(0,0,0,0.08)',
+            header: '0 4px 14px rgba(0,0,0,0.12)',
+          },
+          animation: {
+            'pulse-grow-shrink': 'pulse-grow-shrink 2.5s infinite ease-in-out',
+            'scroll-left': 'scrollLeft 25s linear infinite',
+          },
+          keyframes: {
+            'pulse-grow-shrink': {
+              '0%, 100%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(1.05)' },
+            },
+            scrollLeft: {
+              '0%': { transform: 'translateX(100%)' },
+              '100%': { transform: 'translateX(-100%)' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', 'Nunito Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: linear-gradient(180deg, #fff7ed 0%, #fffbeb 100%);
+      color: #431407;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #fde7c0;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #b91c1c;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #991b1b;
+    }
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: #b91c1c #fde7c0;
+    }
+    *:focus-visible {
+      outline: 3px solid #f59e0b;
+      outline-offset: 2px;
+    }
+    button:focus-visible, a:focus-visible {
+      outline: 3px solid #f59e0b !important;
+      outline-offset: 2px !important;
+    }
+    .animate-scroll-left {
+      animation: scrollLeft 25s linear infinite;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script defer src="/static/js/bundle.js"></script>
+</body>
+</html>

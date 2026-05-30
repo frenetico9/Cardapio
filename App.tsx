@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import StyledCategorySection from './components/StyledCategorySection';
@@ -8,17 +7,21 @@ import OrderViaWhatsAppModal from './components/OrderViaWhatsAppModal';
 import WelcomeSection from './components/WelcomeSection';
 import CategoryNavigation from './components/CategoryNavigation';
 import InfoPanel from './components/InfoPanel';
-import SelectBordaModal from './components/SelectBordaModal';
 import CouponHighlightPopup from './components/CouponHighlightPopup';
-import CouponMarquee from './components/CouponMarquee'; // Importado o CouponMarquee
-import { RESTAURANT_INFO, NAV_CATEGORIES, AVAILABLE_PAYMENT_METHODS, InfoIcon, CONST_INITIAL_MENU_ITEMS, CONST_AVAILABLE_COUPONS, CONST_AVAILABLE_BORDAS } from './constants';
+import CouponMarquee from './components/CouponMarquee';
+import {
+  RESTAURANT_INFO,
+  NAV_CATEGORIES,
+  AVAILABLE_PAYMENT_METHODS,
+  InfoIcon,
+  CONST_INITIAL_MENU_ITEMS,
+  CONST_AVAILABLE_COUPONS,
+} from './constants';
 import { MenuItem, CartItem, Coupon } from './types';
 
-
 const App: React.FC = () => {
-  // Data is now sourced directly from constants
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([...CONST_INITIAL_MENU_ITEMS, ...CONST_AVAILABLE_BORDAS]);
-  const [coupons, setCoupons] = useState<Coupon[]>(CONST_AVAILABLE_COUPONS);
+  const [menuItems] = useState<MenuItem[]>(CONST_INITIAL_MENU_ITEMS);
+  const [coupons] = useState<Coupon[]>(CONST_AVAILABLE_COUPONS);
 
   const [activeCategory, setActiveCategory] = useState<string>(NAV_CATEGORIES[0]?.id || 'all');
   const [itemsToDisplay, setItemsToDisplay] = useState<MenuItem[]>([]);
@@ -27,52 +30,44 @@ const App: React.FC = () => {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [showAddedToCartMessage, setShowAddedToCartMessage] = useState<string | null>(null);
 
-  const [isBordaModalOpen, setIsBordaModalOpen] = useState(false);
-  const [currentPastelForBorda, setCurrentPastelForBorda] = useState<MenuItem | undefined>(undefined);
-
   const [highlightedCoupon, setHighlightedCoupon] = useState<Coupon | null>(null);
   const [isCouponPopupVisible, setIsCouponPopupVisible] = useState<boolean>(false);
   const COUPON_POPUP_DISMISSED_KEY = 'couponPopupDismissedTimestamp';
-  const COUPON_POPUP_DISMISS_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+  const COUPON_POPUP_DISMISS_DURATION = 24 * 60 * 60 * 1000;
 
-  // Ajustado para acomodar o CouponMarquee (32px ou h-8)
-  const fixedHeaderHeightClasses = "pt-[192px] sm:pt-[240px]"; // Height of Header + CategoryNavigation + CouponMarquee
+  const fixedHeaderHeightClasses = 'pt-[256px] sm:pt-[288px]';
 
   useEffect(() => {
-    const displayableItems = menuItems.filter(item => item.itemType !== 'Borda');
     if (activeCategory === 'all') {
-      setItemsToDisplay(displayableItems);
+      setItemsToDisplay(menuItems);
     } else {
-      setItemsToDisplay(displayableItems.filter(item => item.category === activeCategory));
+      setItemsToDisplay(menuItems.filter(item => item.category === activeCategory));
     }
   }, [activeCategory, menuItems]);
 
   useEffect(() => {
     const dismissedTimestamp = localStorage.getItem(COUPON_POPUP_DISMISSED_KEY);
-    if (dismissedTimestamp && (Date.now() - parseInt(dismissedTimestamp)) < COUPON_POPUP_DISMISS_DURATION) {
+    if (dismissedTimestamp && Date.now() - parseInt(dismissedTimestamp) < COUPON_POPUP_DISMISS_DURATION) {
       setIsCouponPopupVisible(false);
-      // return; // Não retornar aqui, pois o highlightedCoupon para o marquee ainda pode ser útil
     }
 
     const activeCoupons = coupons.filter(c => c.isActive);
     if (activeCoupons.length > 0) {
-      let bestCoupon = activeCoupons.find(c => c.expiryDate); 
-      if (!bestCoupon) bestCoupon = activeCoupons.find(c => c.description); 
-      if (!bestCoupon) bestCoupon = activeCoupons[0]; 
-      
+      let bestCoupon = activeCoupons.find(c => c.expiryDate);
+      if (!bestCoupon) bestCoupon = activeCoupons.find(c => c.description);
+      if (!bestCoupon) bestCoupon = activeCoupons[0];
+
       if (bestCoupon) {
         setHighlightedCoupon(bestCoupon);
-        // O popup pode ainda ser controlado pelo timestamp, mas o marquee sempre mostrará o cupom
-        if (!(dismissedTimestamp && (Date.now() - parseInt(dismissedTimestamp)) < COUPON_POPUP_DISMISS_DURATION)) {
-            const timer = setTimeout(() => setIsCouponPopupVisible(true), 1500); 
-            return () => clearTimeout(timer);
+        if (!(dismissedTimestamp && Date.now() - parseInt(dismissedTimestamp) < COUPON_POPUP_DISMISS_DURATION)) {
+          const timer = setTimeout(() => setIsCouponPopupVisible(true), 1500);
+          return () => clearTimeout(timer);
         }
       }
     } else {
-        setHighlightedCoupon(null); // Garante que marquee não apareça se não houver cupom ativo
+      setHighlightedCoupon(null);
     }
-    // setIsCouponPopupVisible(false); // Linha removida para não interferir com o popup
-  }, [coupons]); 
+  }, [coupons]);
 
   const handleCloseCouponPopup = () => {
     setIsCouponPopupVisible(false);
@@ -83,11 +78,10 @@ const App: React.FC = () => {
     setActiveCategory(categoryId);
     const mainContentArea = document.querySelector('main');
     if (mainContentArea) mainContentArea.scrollTop = 0;
-    else window.scrollTo(0,0);
+    else window.scrollTo(0, 0);
   };
 
-  const handleSelectPastelOrAddItem = (item: MenuItem) => {
-    // Availability is now based on current constants.tsx data
+  const handleAddItem = (item: MenuItem) => {
     const liveItem = menuItems.find(mi => mi.id === item.id);
     if (!liveItem || !liveItem.isAvailable) {
       setShowAddedToCartMessage(`${item.name} está indisponível no momento.`);
@@ -95,60 +89,19 @@ const App: React.FC = () => {
       return;
     }
 
-    if (liveItem.itemType === 'Tradicional' || liveItem.itemType === 'Especial' || liveItem.itemType === 'Doce') {
-      setCurrentPastelForBorda(liveItem);
-      setIsBordaModalOpen(true);
-    } else { 
-      const cartItemId = liveItem.id + '_direct'; 
-      setShowAddedToCartMessage(`${liveItem.name} adicionado à seleção!`);
-      setTimeout(() => setShowAddedToCartMessage(null), 2000);
-      setSelectedItems(prevItems => {
-        const existingItem = prevItems.find(ci => ci.cartItemId === cartItemId);
-        if (existingItem) {
-          return prevItems.map(ci => ci.cartItemId === cartItemId ? { ...ci, quantity: ci.quantity + 1 } : ci);
-        }
-        return [...prevItems, { ...liveItem, cartItemId, baseItemName: liveItem.name, quantity: 1 }];
-      });
-    }
-  };
-  
-  const handleConfirmBordaSelection = (pastel: MenuItem, chosenBorda?: MenuItem) => {
-    const currentPastelState = menuItems.find(mi => mi.id === pastel.id);
-    if (!currentPastelState || !currentPastelState.isAvailable) {
-        setIsBordaModalOpen(false);
-        setCurrentPastelForBorda(undefined);
-        setShowAddedToCartMessage(`${pastel.name} ficou indisponível (conforme dados atuais).`);
-        setTimeout(() => setShowAddedToCartMessage(null), 3000);
-        return;
-    }
-    if (chosenBorda) {
-        const currentBordaState = menuItems.find(mi => mi.id === chosenBorda.id);
-        if (!currentBordaState || !currentBordaState.isAvailable) {
-           setIsBordaModalOpen(false);
-           setCurrentPastelForBorda(undefined);
-           setShowAddedToCartMessage(`A borda ${chosenBorda.name} ficou indisponível (conforme dados atuais).`);
-           setTimeout(() => setShowAddedToCartMessage(null), 3000);
-           return;
-        }
-    }
+    const cartItemId = liveItem.id + '_direct';
+    setShowAddedToCartMessage(`${liveItem.name} adicionado à seleção!`);
+    setTimeout(() => setShowAddedToCartMessage(null), 2200);
 
-    const cartItemId = pastel.id + (chosenBorda ? `_${chosenBorda.id}` : '_no_borda');
-    const basePastelName = pastel.name;
-    let displayNameInCart = basePastelName + (chosenBorda ? ` (Borda: ${chosenBorda.name})` : '');
-  
-    setShowAddedToCartMessage(`${displayNameInCart} adicionado à seleção!`);
-    setTimeout(() => setShowAddedToCartMessage(null), 2500);
-  
     setSelectedItems(prevItems => {
       const existingItem = prevItems.find(ci => ci.cartItemId === cartItemId);
       if (existingItem) {
-        return prevItems.map(ci => ci.cartItemId === cartItemId ? { ...ci, quantity: ci.quantity + 1 } : ci);
+        return prevItems.map(ci =>
+          ci.cartItemId === cartItemId ? { ...ci, quantity: ci.quantity + 1 } : ci
+        );
       }
-      return [...prevItems, { ...pastel, cartItemId, baseItemName: basePastelName, name: displayNameInCart, quantity: 1, selectedBorda: chosenBorda, price: pastel.price + (chosenBorda?.price || 0), imageUrl: pastel.imageUrl }];
+      return [...prevItems, { ...liveItem, cartItemId, baseItemName: liveItem.name, quantity: 1 }];
     });
-  
-    setIsBordaModalOpen(false);
-    setCurrentPastelForBorda(undefined);
   };
 
   const handleRemoveSelectedItem = (cartItemIdToRemove: string) => {
@@ -156,28 +109,36 @@ const App: React.FC = () => {
   };
 
   const handleUpdateSelectedItemQuantity = (cartItemIdToUpdate: string, newQuantity: number) => {
-    if (newQuantity <= 0) handleRemoveSelectedItem(cartItemIdToUpdate);
-    else setSelectedItems(prevItems => prevItems.map(item => (item.cartItemId === cartItemIdToUpdate ? { ...item, quantity: newQuantity } : item)));
+    if (newQuantity <= 0) {
+      handleRemoveSelectedItem(cartItemIdToUpdate);
+    } else {
+      setSelectedItems(prevItems =>
+        prevItems.map(item =>
+          item.cartItemId === cartItemIdToUpdate ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    }
   };
 
-  const calculateSubtotalAmount = (): number => selectedItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  const getSelectedItemCount = (): number => selectedItems.reduce((count, item) => count + item.quantity, 0);
+  const calculateSubtotalAmount = (): number =>
+    selectedItems.reduce((total, item) => total + item.price * item.quantity, 0);
+
+  const getSelectedItemCount = (): number =>
+    selectedItems.reduce((count, item) => count + item.quantity, 0);
+
   const toggleWhatsAppModal = () => setIsWhatsAppModalOpen(!isWhatsAppModalOpen);
-  
+
   const handleWhatsAppOrderSent = () => {
-    setSelectedItems([]); 
+    setSelectedItems([]);
     setIsWhatsAppModalOpen(false);
-    setIsBordaModalOpen(false);
-    setCurrentPastelForBorda(undefined);
-    setShowAddedToCartMessage("Seu pedido foi enviado para o WhatsApp! Finalize por lá.");
+    setShowAddedToCartMessage('Seu pedido foi enviado para o WhatsApp! Finalize por lá.');
     setTimeout(() => setShowAddedToCartMessage(null), 4000);
   };
 
   const currentNavCategoryObject = NAV_CATEGORIES.find(cat => cat.id === activeCategory);
-  const availableBordasForModal = menuItems.filter(item => item.itemType === 'Borda' && item.isAvailable); 
 
   return (
-    <div id="app-container" className="flex flex-col min-h-screen font-sans">
+    <div id="app-container" className="flex flex-col min-h-screen font-sans bg-lightBg">
       <div className="fixed top-0 left-0 right-0 z-40 shadow-header">
         <Header info={RESTAURANT_INFO} />
         <CategoryNavigation
@@ -185,11 +146,15 @@ const App: React.FC = () => {
           activeCategory={activeCategory}
           onSelectCategory={handleCategorySelect}
         />
-        <CouponMarquee coupon={highlightedCoupon} /> {/* Adicionado o CouponMarquee aqui */}
+        <CouponMarquee coupon={highlightedCoupon} />
       </div>
 
       <main className={`flex-grow container mx-auto px-2 sm:px-4 lg:px-6 py-8 bg-lightBg ${fixedHeaderHeightClasses}`}>
-        <WelcomeSection name={RESTAURANT_INFO.name} tagline1={RESTAURANT_INFO.tagline1} />
+        <WelcomeSection
+          name={RESTAURANT_INFO.name}
+          tagline1={RESTAURANT_INFO.tagline1}
+          tagline2={RESTAURANT_INFO.tagline2}
+        />
 
         {activeCategory === 'all' ? (
           NAV_CATEGORIES.filter(cat => cat.id !== 'all').map(loopCategory => {
@@ -199,7 +164,7 @@ const App: React.FC = () => {
                 key={loopCategory.id}
                 category={loopCategory}
                 items={itemsForThisCategory}
-                onSelectPastel={handleSelectPastelOrAddItem}
+                onSelectItem={handleAddItem}
               />
             );
           })
@@ -207,40 +172,32 @@ const App: React.FC = () => {
           <StyledCategorySection
             key={currentNavCategoryObject.id}
             category={currentNavCategoryObject}
-            items={itemsToDisplay} 
-            onSelectPastel={handleSelectPastelOrAddItem}
+            items={itemsToDisplay}
+            onSelectItem={handleAddItem}
           />
         ) : (
-             <div className="text-center py-6 sm:py-10 my-6 sm:my-8 bg-cardBg p-4 sm:p-6 rounded-lg shadow-subtle">
-                <InfoIcon className="text-4xl sm:text-5xl text-brandText opacity-50 mb-3 sm:mb-4" />
-                <p className="text-lg sm:text-xl text-brandText font-semibold">
-                  {currentNavCategoryObject ? `Nenhum item encontrado em ${currentNavCategoryObject.name}!` : 'Categoria não encontrada.'}
-                </p>
-                <p className="text-itemDescriptionText opacity-75 text-sm sm:text-base">Por favor, selecione outra categoria ou verifique a aba "Todos".</p>
-            </div>
+          <div className="text-center py-6 sm:py-10 my-6 sm:my-8 bg-cardBg p-4 sm:p-6 rounded-xl shadow-subtle border border-amber-200">
+            <InfoIcon className="text-4xl sm:text-5xl text-brandText opacity-50 mb-3 sm:mb-4" />
+            <p className="text-lg sm:text-xl text-brandText font-semibold">
+              {currentNavCategoryObject
+                ? `Nenhum item encontrado em ${currentNavCategoryObject.name}!`
+                : 'Categoria não encontrada.'}
+            </p>
+            <p className="text-itemDescriptionText opacity-75 text-sm sm:text-base">
+              Por favor, selecione outra categoria ou verifique a aba "Todos".
+            </p>
+          </div>
         )}
 
-        <InfoPanel
-            info={RESTAURANT_INFO}
-            paymentMethods={AVAILABLE_PAYMENT_METHODS}
-        />
+        <InfoPanel info={RESTAURANT_INFO} paymentMethods={AVAILABLE_PAYMENT_METHODS} />
       </main>
 
       <Footer info={RESTAURANT_INFO} />
+
       <FloatingActionButtons
         itemCount={getSelectedItemCount()}
         onWhatsAppOrderClick={toggleWhatsAppModal}
       />
-
-      {currentPastelForBorda && (
-        <SelectBordaModal
-          isOpen={isBordaModalOpen}
-          onClose={() => { setIsBordaModalOpen(false); setCurrentPastelForBorda(undefined); }}
-          pastel={currentPastelForBorda}
-          bordas={availableBordasForModal}
-          onConfirm={handleConfirmBordaSelection}
-        />
-      )}
 
       <OrderViaWhatsAppModal
         isOpen={isWhatsAppModalOpen}
@@ -252,7 +209,7 @@ const App: React.FC = () => {
         paymentMethods={AVAILABLE_PAYMENT_METHODS}
         restaurantWhatsAppNumber={RESTAURANT_INFO.contact.whatsapp}
         onOrderSent={handleWhatsAppOrderSent}
-        availableCoupons={coupons} 
+        availableCoupons={coupons}
       />
 
       <CouponHighlightPopup

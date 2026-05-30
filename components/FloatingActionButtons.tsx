@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { WhatsAppIcon } from '../constants';
 
@@ -8,7 +7,6 @@ interface FloatingActionButtonsProps {
 }
 
 const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({ itemCount, onWhatsAppOrderClick }) => {
-
   return (
     <div className="fixed bottom-6 right-6 space-y-3 z-50 font-sans">
       <button

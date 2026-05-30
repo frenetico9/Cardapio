@@ -1,7 +1,6 @@
-
 import React from 'react';
 
-export type ItemType = 'Tradicional' | 'Especial' | 'Doce' | 'Borda' | 'Bebida';
+export type ItemType = 'Frango' | 'Combo' | 'Acompanhamento' | 'Bebida';
 
 export interface RestaurantInfo {
   name: string;
@@ -78,7 +77,6 @@ export interface PaymentMethod {
   description?: string; 
 }
 
-// Coupon Type
 export interface Coupon {
   id: string;
   code: string; 
@@ -92,30 +90,25 @@ export interface Coupon {
   maxUses?: number; 
 }
 
-// FIX: Define AuthView type
 export type AuthView = 'login' | 'register' | 'verifyEmail';
-
-// FIX: Define UserRole type
 export type UserRole = 'admin' | 'customer';
 
-// FIX: Define User interface
 export interface User {
   id: string;
   email: string;
   role: UserRole;
   isVerified: boolean;
-  name?: string; // Optional name field
+  name?: string;
 }
 
-// FIX: Define AuthContextType
 export interface AuthContextType {
   currentUser: User | null;
   isLoading: boolean;
   authError: string | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string) => Promise<boolean>; // Returns true if verification email "sent"
+  register: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  sendVerificationEmail: (email: string) => Promise<string | null>; // Returns code for mock, null on failure
+  sendVerificationEmail: (email: string) => Promise<string | null>;
   verifyEmailCode: (email: string, code: string) => Promise<boolean>;
   clearAuthError: () => void;
 }

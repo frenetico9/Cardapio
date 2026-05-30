@@ -133,7 +133,7 @@ const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
 
     const selectedPaymentMethod = paymentMethods.find(p => p.id === selectedPaymentMethodId);
 
-    let message = `Olá, Big Pastel da Bel! Gostaria de fazer o seguinte pedido:\n\n`;
+    let message = `Olá, Los Pollos Hermanos! Gostaria de fazer o seguinte pedido:\n\n`;
     message += `*Cliente:* ${customerName.trim()}\n`;
     message += `*Endereço para Entrega:*\n${deliveryAddress.trim()}\n\n`;
     message += "*Itens do Pedido:*\n";
@@ -190,7 +190,7 @@ const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
           <div>
             <h3 className="text-lg font-semibold text-slate-700 mb-2">Itens Selecionados:</h3>
             {selectedItems.length === 0 ? (
-              <p className="text-itemDescriptionText italic">Nenhum item selecionado. Volte ao cardápio!</p>
+              <p className="text-itemDescriptionText italic">Nenhum item selecionado. Volte ao cardápio e escolha seu frango assado!</p>
             ) : (
               <div className="space-y-3 max-h-40 sm:max-h-48 overflow-y-auto pr-2"> {/* Adjusted max-h */}
                 {selectedItems.map(item => (
@@ -307,7 +307,7 @@ const OrderViaWhatsAppModal: React.FC<OrderViaWhatsAppModalProps> = ({
                         onChange={e => setDeliveryAddress(e.target.value)} 
                         rows={3}
                         className="w-full p-2.5 pl-10 border border-slate-300 rounded-lg focus:ring-vibrantOrange focus:border-vibrantOrange text-sm text-slate-700" 
-                        placeholder="Ex: Rua das Palmeiras, 123, Bairro Sol Nascente, Apt 4B, Perto do mercado X."
+                        placeholder="Ex: Rua das Palmeiras, 123, Bairro Sol Nascente, Apt 4B, referência da entrega."
                         required
                     />
                 </div>
