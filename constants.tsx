@@ -45,13 +45,13 @@ export const RESTAURANT_INFO: RestaurantInfo = {
   operatingHours: 'Todos os dias, das 11h às 22h',
   contact: {
     phone: '',
-    whatsapp: '5561991775501',
-    email: 'contato@lospolloshermanos.com.br',
+    whatsapp: '5561985140145',
+    email: '',
   },
-  address: 'Condomínio Entre Lagos 2 CL Lote 16',
+  address: 'Condomínio Residencial Paraíso - Rua Principal Conjunto O',
   socialMedia: {
-    instagram: 'https://instagram.com/lospolloshermanos',
-    facebook: 'https://facebook.com/lospolloshermanos',
+    instagram: 'https://instagram.com/lospollos.hermanos00',
+    facebook: '',
   },
   bookingLink: '#',
   deliveryLink: '#',
